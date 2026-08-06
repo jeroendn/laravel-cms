@@ -74,6 +74,24 @@ containers, installs prod dependencies, builds assets, runs migrations,
 warms Laravel's caches and finally makes `storage/` and
 `bootstrap/cache/` writable for Apache.
 
+The whole run is wrapped in maintenance mode, so visitors get the branded
+"Zo weer online" page (`resources/views/errors/503.blade.php`, HTTP 503)
+instead of the errors a half-installed app would throw. That page is
+prerendered into `storage/framework/down` and served before Composer's
+autoloader even loads, which is why it must stay self-contained — no
+`@vite`, no external fonts. Preview it locally with:
+
+```bash
+./develop artisan down --render="errors::503" && ./develop artisan up
+```
+
+A **failed** deploy leaves the site in maintenance mode on purpose. Fix the
+cause and re-run `./deploy`, or force it back online:
+
+```bash
+sudo docker exec -it php_magnesium php artisan up
+```
+
 Those last two stay owned by the deploying user and get their write access
 through the `www-data` group — the repo is bind-mounted, so handing the
 directories to `www-data` outright would lock the deploying user out of the

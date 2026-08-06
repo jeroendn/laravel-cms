@@ -66,6 +66,36 @@ A **blog website** for a client, built with Laravel and styled with
   Permission denied" (hit on 2026-08-06). The step runs after
   `artisan optimize` so it also normalizes what `docker exec` wrote as root.
 
+### Maintenance mode during deploys
+
+`./deploy` brackets everything between the git pull and the final chown with
+`artisan down --render="errors::503" --retry=180` … `artisan up`. Without it
+visitors get a raw **500** for the whole deploy (measured 2026-08-06):
+`composer install` swaps out the autoloader under the running app, and
+`npm run build` empties `public/build/`, so the layout's `@vite` throws
+`ViteManifestNotFoundException`.
+
+- **`--render` is what makes it work, not `artisan down` on its own.** It
+  prerenders the view into `storage/framework/down`, which `public/index.php`
+  echoes *before* `require vendor/autoload.php`. Plain `artisan down` boots the
+  framework to render the 503 — exactly what is broken mid-deploy. Verified:
+  with `vendor/` moved away entirely the page still returns a clean 503.
+- `resources/views/errors/503.blade.php` must stay **fully self-contained** —
+  no `@vite`, no external fonts/images, inline `<style>` only. It mirrors
+  Pico's default light/dark palette by hand. `MaintenancePageTest` guards this.
+- The prerender runs **before** the git pull, so it uses the *previous*
+  revision of the view: a change to the maintenance page only shows up from
+  the next deploy onwards.
+- `artisan up` is the **last** step, after the chown — coming back before
+  `storage/` is writable would fail the first requests on sessions/logs.
+- A failed deploy deliberately **leaves the site down** (a half-deployed app
+  should not serve traffic); the `ERR` trap prints the `artisan up` escape
+  hatch.
+- Not covered: the few seconds of `docker compose down` → `up -d`, where there
+  is no PHP at all and Caddy answers **502**. Closing that too would need a
+  `handle_errors` block in `docker/caddy/Caddyfile` (Caddy mounts the repo at
+  `/apps/magnesium:ro`) — not done, same trade-off as jeroendn-website.
+
 ### ⚠️ Tooling rule (hard)
 
 `php`, `composer`, `artisan`, `npm`, `phpunit` and migrations **ALWAYS
@@ -182,7 +212,8 @@ the front door**: it auto-detects context and forwards dev commands into
 ## 7. Tests
 
 Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
-`Auth/PasswordResetTest`, `Blog/PublicBlogTest`, `Blog/AdminPostsTest`)
+`Auth/PasswordResetTest`, `Blog/PublicBlogTest`, `Blog/AdminPostsTest`,
+`MaintenancePageTest`)
 and use `RefreshDatabase` on sqlite `:memory:`. They are the default level
 here — almost everything is framework-coupled and best tested over HTTP.
 `tests/Unit/` is only for pure model logic (`PostTest`: `Post::excerpt()`
@@ -233,6 +264,8 @@ with a dummy `APP_KEY` since CI has no `.env`.
 - [x] Blog functionality: public list/detail + admin CRUD with Quill
       WYSIWYG and HTMLPurifier output sanitization (see §6), with
       feature tests.
+- [x] Maintenance page: branded, self-contained 503 prerendered by `./deploy`
+      instead of the raw 500 visitors used to get (see §2).
 - [ ] User management: an admin UI to create accounts / grant others
       access (for now this goes through tinker or a no-password row +
       password reset, see §5).

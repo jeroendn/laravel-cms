@@ -7,9 +7,12 @@ SUCCESS="\e[42m"
 WARNING="\e[43m"
 ERROR="\e[41m"
 
-trap 'echo -e "${ERROR}Deployment failed${NC}"' ERR
-
 CONTAINER_NAME="php_magnesium"
+
+trap 'echo -e "${ERROR}Deployment failed — the site is still in maintenance mode${NC}"
+      echo -e "${WARNING}Fix the problem and re-run ./deploy, or force it back online with:${NC}"
+      echo -e "${WARNING}  sudo docker exec -it ${CONTAINER_NAME} php artisan up${NC}"' ERR
+
 GIT_BRANCH="master"
 GIT_REMOTE="origin"
 
@@ -20,6 +23,10 @@ fi
 
 echo -e "${SUCCESS}Please enter your sudo password:${NC}"
 sudo -v
+
+echo -e "${SUCCESS}Enabling maintenance mode${NC}"
+sudo docker exec -it $CONTAINER_NAME php artisan down --render="errors::503" --retry=180 \
+  || echo -e "${WARNING}Could not enable maintenance mode (container not running?)${NC}"
 
 echo -e "${SUCCESS}Pulling latest changes${NC}"
 git reset --hard
@@ -56,5 +63,8 @@ sudo docker exec -it $CONTAINER_NAME php artisan optimize
 echo -e "${SUCCESS}Setting writable app directories${NC}"
 sudo chown -R "$(id -un):www-data" storage bootstrap/cache
 sudo chmod -R g+rwX storage bootstrap/cache
+
+echo -e "${SUCCESS}Disabling maintenance mode${NC}"
+sudo docker exec -it $CONTAINER_NAME php artisan up
 
 echo -e "${SUCCESS}Deployment finished${NC}"
