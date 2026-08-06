@@ -14,7 +14,8 @@
         "jeroendn/php-helpers": "^1.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
-        "laravel/ui": "^4.6"
+        "laravel/ui": "^4.6",
+        "stevebauman/purify": "^6.3"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.52",

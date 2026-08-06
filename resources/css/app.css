@@ -1,4 +1,5 @@
 @import '@picocss/pico';
+@import 'quill/dist/quill.snow.css';
 
 /*
  * Project-specific overrides go below. Pico is configured entirely through
@@ -8,3 +9,23 @@
  *     --pico-primary: #2c7a4b;
  * }
  */
+
+/* Quill WYSIWYG editor (admin post form). Quill ships its own complete
+   (light) styling; only give it a workable height, and keep the editor
+   surface light in dark mode too — Quill has no dark theme. */
+.ql-editor {
+    min-height: 15rem;
+}
+
+.ql-toolbar.ql-snow,
+.ql-container.ql-snow {
+    background: #fff;
+    color: #444;
+}
+
+/* In dark mode Pico gives headings/paragraphs a light text color, which is
+   unreadable on the editor's white surface; make them inherit the editor
+   color instead (links keep their own styling). */
+.ql-editor :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) {
+    color: inherit;
+}
