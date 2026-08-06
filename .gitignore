@@ -28,3 +28,9 @@ Homestead.json
 .env.production
 .phpactor.json
 auth.json
+
+# Tool caches (rector/phpstan/cs-fixer/phpunit); tmp/.gitkeep keeps the dir in git
+/tmp/*
+!/tmp/.gitkeep
+
+.idea/

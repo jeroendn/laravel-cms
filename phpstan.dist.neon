@@ -1,0 +1,20 @@
+includes:
+    - phpstan-baseline.neon
+    - vendor/larastan/larastan/extension.neon
+    - vendor/tomasvotruba/bladestan/config/extension.neon
+
+parameters:
+    level: 10
+    tmpDir: tmp/phpstan
+    paths:
+        - app
+        - config
+        - database
+        - routes
+        - tests
+        - rector.php
+        - .php-cs-fixer.dist.php
+        - artisan
+        - bootstrap/app.php # Not the whole dir: bootstrap/cache holds generated files
+        - bootstrap/providers.php
+        - public/index.php

@@ -1,0 +1,17 @@
+# Currently DORMANT: the build context is docker/php/ (see docker-compose.yml)
+# and the app is bind-mounted, never ADD/COPY'd into the image — so this file
+# is not consulted by the build. It is kept as a tripwire: if the context ever
+# becomes the repo root, it activates automatically and keeps secrets, VCS
+# metadata and local artifacts out of the image layers.
+.git
+.gitattributes
+.gitignore
+.idea
+.env
+.env.example
+node_modules
+vendor
+/tmp/*
+!/tmp/.gitkeep
+/storage/logs
+/public/build

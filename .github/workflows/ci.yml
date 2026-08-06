@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: '8.5'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-php${{ env.PHP_VERSION }}-${{ hashFiles('composer.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: composer install --prefer-dist --no-progress
+
+      - name: Composer validate
+        run: composer validate --strict
+
+      - name: Composer normalize
+        run: composer normalize --dry-run
+
+  check:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        script: [rector-check, cs-check, phpstan, phpunit]
+    # CI has no .env: feature tests boot the web middleware (EncryptCookies),
+    # which needs a non-null APP_KEY. The key is a CI-only dummy, not a secret.
+    env:
+      APP_KEY: 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY='
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+
+      - name: Restore dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: vendor
+          key: composer-php${{ env.PHP_VERSION }}-${{ hashFiles('composer.lock') }}
+          fail-on-cache-miss: true
+
+      - name: Run ${{ matrix.script }}
+        run: composer ${{ matrix.script }}
+
+  assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          # Matches the Node version in the php_magnesium container.
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build

@@ -1,0 +1,10 @@
+@import '@picocss/pico';
+
+/*
+ * Project-specific overrides go below. Pico is configured entirely through
+ * CSS custom properties, e.g.:
+ *
+ * :root {
+ *     --pico-primary: #2c7a4b;
+ * }
+ */

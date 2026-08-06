@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+set -e
+
+NC="\e[0m"
+SUCCESS="\e[42m"
+WARNING="\e[43m"
+ERROR="\e[41m"
+
+trap 'echo -e "${ERROR}Deployment failed${NC}"' ERR
+
+CONTAINER_NAME="php_magnesium"
+GIT_BRANCH="master"
+GIT_REMOTE="origin"
+
+if [ "$EUID" -eq 0 ]; then
+  echo -e "${ERROR}Do not run as sudo!${NC}"
+  exit 1
+fi
+
+echo -e "${SUCCESS}Please enter your sudo password:${NC}"
+sudo -v
+
+echo -e "${SUCCESS}Pulling latest changes${NC}"
+git reset --hard
+git checkout $GIT_BRANCH
+git fetch $GIT_REMOTE
+git reset --hard $GIT_REMOTE/$GIT_BRANCH
+
+echo -e "${SUCCESS}Setting executable permissions${NC}"
+chmod +x ./deploy
+
+echo -e "${SUCCESS}Rebuilding Docker image${NC}"
+sudo docker compose build --no-cache --pull
+
+echo -e "${SUCCESS}Restarting Docker containers${NC}"
+sudo docker compose down
+sudo docker compose up -d
+
+echo -e "${SUCCESS}Installing libraries${NC}"
+sudo docker exec -it $CONTAINER_NAME composer install --no-dev --optimize-autoloader --no-interaction
+sudo docker exec -it $CONTAINER_NAME npm ci
+sudo docker exec -it $CONTAINER_NAME npm run build
+
+echo -e "${SUCCESS}Setting writable app directories${NC}"
+sudo docker exec -it $CONTAINER_NAME chown -R www-data:www-data storage bootstrap/cache
+
+echo -e "${SUCCESS}Running database migrations${NC}"
+sudo docker exec -it $CONTAINER_NAME php artisan migrate --force --no-interaction
+
+echo -e "${SUCCESS}Caching Laravel config/routes/views${NC}"
+sudo docker exec -it $CONTAINER_NAME php artisan optimize
+
+echo -e "${SUCCESS}Deployment finished${NC}"

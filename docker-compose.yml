@@ -1,0 +1,20 @@
+services:
+  php_magnesium:
+    hostname: magnesium
+    build: docker/php/.
+    image: php_magnesium:apache
+    container_name: php_magnesium
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Amsterdam
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - docker_server_caddy
+      - docker_server_database
+
+networks:
+  docker_server_caddy:
+    external: true
+  docker_server_database:
+    external: true

@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+
+set -uo pipefail
+
+CONTAINER="${MAGNESIUM_CONTAINER:-php_magnesium}"
+
+# Detect Git Bash on Windows: there `uname -s` prints "MINGW64_NT-..." or
+# "MSYS_NT-...". Git Bash needs two workarounds that must NOT apply on
+# macOS/Linux/WSL:
+#
+#   1. Git Bash rewrites arguments that look like Unix paths into Windows paths
+#      before the command ever sees them (e.g. `/var/www` becomes
+#      `C:/Program Files/Git/var/www`), which mangles paths meant for inside
+#      the container. MSYS_NO_PATHCONV=1 disables that rewriting.
+#
+#   2. Git Bash's terminal is not a real Windows console, so allocating a TTY
+#      with `docker exec -t` fails there ("the input device is not a TTY").
+#      run() checks IS_MSYS and leaves out the -t flag in that case.
+IS_MSYS=false
+case "$(uname -s 2>/dev/null)" in
+    MINGW* | MSYS*)
+        IS_MSYS=true
+        export MSYS_NO_PATHCONV=1
+        ;;
+esac
+
+ok()  { printf '\033[30;42m %s \033[0m\n' "$1"; }
+err() { printf '\033[97;41m %s \033[0m\n' "$1" >&2; }
+
+# Are we running inside the Docker container?
+in_container() { [ -f /.dockerenv ]; }
+
+ensure_container_running() {
+    if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+        err "Container '$CONTAINER' is not running. Start it with: ./develop up -d --build"
+        exit 1
+    fi
+}
+
+run() {
+    if in_container; then
+        "$@"
+    else
+        ensure_container_running
+        if [ -t 1 ] && [ "$IS_MSYS" = false ]; then
+            docker exec -it "$CONTAINER" "$@"
+        else
+            docker exec "$CONTAINER" "$@"
+        fi
+    fi
+}
+
+usage() {
+    cat <<'EOF'
+Usage: ./develop <command>
+
+Dev commands (executed inside the php_magnesium container):
+  checkout, c                  composer + npm install, asset build and migrations
+  code-quality-assurance, cqa  quality gate: normalize + validate + rector + cs-fix + phpstan + phpunit
+  shell                        open an interactive shell in the container
+  artisan <args>               run any artisan command in the container, e.g. ./develop artisan migrate
+  composer <args>              run any composer command in the container
+  npm <args>                   run any npm command in the container, e.g. ./develop npm run build
+  npx <args>                   run any npx command in the container
+
+Anything else is passed straight through to `docker compose`, e.g.:
+  ./develop up -d --build
+  ./develop down
+  ./develop logs -f
+  ./develop ps
+EOF
+}
+
+case "${1:-}" in
+    ""|help|-h|--help)
+        usage
+        ;;
+    checkout|c)
+        if run composer install \
+            && run bash -c 'test -f .env || { cp .env.example .env && php artisan key:generate --ansi; }' \
+            && run npm install \
+            && run npm run build \
+            && run php artisan migrate; then
+            ok "Checkout finished"
+        else
+            err "Checkout failed"
+            exit 1
+        fi
+        ;;
+    shell)
+        run bash
+        ;;
+    artisan)
+        run php "$@"
+        ;;
+    composer|npm|npx)
+        run "$@"
+        ;;
+    code-quality-assurance|cqa)
+        if run vendor/bin/code-quality-assurance.sh; then
+            ok "Code quality assurance completed"
+        else
+            err "Code quality assurance failed"
+            exit 1
+        fi
+        ;;
+    *)
+        # Default: proxy to docker compose (host only).
+        if in_container; then
+            err "'docker compose' is not available inside the container."
+            exit 1
+        fi
+        exec docker compose "$@"
+        ;;
+esac
