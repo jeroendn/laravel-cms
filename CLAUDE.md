@@ -33,6 +33,17 @@ A **blog website** for a client, built with Laravel and styled with
   `magnesium`, user `magnesium`. Reachable only within the
   `docker_server_database` network, not from the host. Laravel reads the
   credentials from `.env` (`DB_*`).
+- **Least privilege on prod**: the app user `magnesium` only has
+  SELECT/INSERT/UPDATE/DELETE; DDL (migrations) runs as a separate user
+  `magnesium_migrate` via the `mariadb_migrations` connection
+  (`config/database.php`), fed by `DB_MIGRATIONS_USERNAME`/`_PASSWORD` in
+  prod's `.env`. `./develop checkout` and `./deploy` pass
+  `--database=mariadb_migrations` to `artisan migrate` — do the same for
+  ad-hoc migrate commands (`migrate:rollback` etc.) on prod. The
+  `DB_MIGRATIONS_*` vars are **always set** (no fallback): in dev they
+  simply repeat the regular `DB_USERNAME`/`DB_PASSWORD` values, since one
+  unrestricted user suffices there. The users/grants themselves are managed
+  by Jeroen on the shared MariaDB (not by this repo).
 - External networks (created by DockerServer): `docker_server_caddy`,
   `docker_server_database` — declared `external: true` in our
   `docker-compose.yml`.

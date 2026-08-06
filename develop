@@ -80,7 +80,7 @@ case "${1:-}" in
             && run bash -c 'test -f .env || { cp .env.example .env && php artisan key:generate --ansi; }' \
             && run npm install \
             && run npm run build \
-            && run php artisan migrate; then
+            && run php artisan migrate --database=mariadb_migrations; then
             ok "Checkout finished"
         else
             err "Checkout failed"

@@ -46,7 +46,7 @@ echo -e "${SUCCESS}Setting writable app directories${NC}"
 sudo docker exec -it $CONTAINER_NAME chown -R www-data:www-data storage bootstrap/cache
 
 echo -e "${SUCCESS}Running database migrations${NC}"
-sudo docker exec -it $CONTAINER_NAME php artisan migrate --force --no-interaction
+sudo docker exec -it $CONTAINER_NAME php artisan migrate --force --no-interaction --database=mariadb_migrations
 
 echo -e "${SUCCESS}Caching Laravel config/routes/views${NC}"
 sudo docker exec -it $CONTAINER_NAME php artisan optimize

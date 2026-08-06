@@ -28,6 +28,8 @@ All PHP/composer/npm tooling runs **in the container**, never on the host.
 ```
 
 First-time setup: copy `.env.example` to `.env`, fill in `DB_PASSWORD`
+and the `DB_MIGRATIONS_*` vars — in dev those repeat the regular
+`DB_USERNAME`/`DB_PASSWORD` values
 (database and user must exist in the shared MariaDB), then
 `./develop checkout`. Add `magnesium.local` to your hosts file and
 restart the DockerServer stack once so Caddy picks up the imported
@@ -60,3 +62,8 @@ On the server, from the repo checkout:
 Hard-resets to `origin/master`, rebuilds the image, restarts the
 containers, installs prod dependencies, builds assets, runs migrations
 and warms Laravel's caches.
+
+In prod's `.env` the `DB_MIGRATIONS_USERNAME`/`DB_MIGRATIONS_PASSWORD`
+vars hold a dedicated DDL user: migrations run as that user, while the
+regular DB user is restricted to SELECT/INSERT/UPDATE/DELETE. In dev the
+same vars simply repeat the regular credentials.
