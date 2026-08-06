@@ -175,9 +175,20 @@ the front door**: it auto-detects context and forwards dev commands into
 
 Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
 `Auth/PasswordResetTest`, `Blog/PublicBlogTest`, `Blog/AdminPostsTest`)
-and use `RefreshDatabase` on sqlite `:memory:`.
+and use `RefreshDatabase` on sqlite `:memory:`. They are the default level
+here — almost everything is framework-coupled and best tested over HTTP.
+`tests/Unit/` is only for pure model logic (`PostTest`: `Post::excerpt()`
+and the `isPublished()` boundaries); it still extends `Tests\TestCase`
+(the container is needed for the Purify facade) but skips
+`RefreshDatabase`, since nothing is persisted.
 New functionality gets feature tests in the same style; keep phpstan level
 10 clean (fix errors in new code rather than baselining them).
+
+**Never leave a testsuite directory empty**: git does not track empty
+directories, so the directory is missing on CI and PHPUnit aborts the whole
+run with `Test directory "…" not found` (exit code 2) — green locally, red
+on CI. Either the directory holds a committed test, or its `<testsuite>` is
+removed from `phpunit.xml`.
 
 ## 8. Quality gate
 
