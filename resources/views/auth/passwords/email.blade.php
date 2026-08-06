@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Wachtwoord vergeten')
+@section('title', __('Reset Password'))
 
 @section('content')
     <article style="max-width: 30rem; margin-inline: auto;">
         <hgroup>
-            <h1>Wachtwoord vergeten</h1>
-            <p>Vul je e-mailadres in; je ontvangt een link om een nieuw wachtwoord in te stellen.</p>
+            <h1>{{ __('Reset Password') }}</h1>
+            <p>{{ __('Enter your e-mail address and you will receive a link to set a new password.') }}</p>
         </hgroup>
 
         @if (session('status'))
@@ -17,7 +17,7 @@
             @csrf
 
             <label for="email">
-                E-mailadres
+                {{ __('Email Address') }}
                 <input id="email" type="email" name="email" value="{{ old('email') }}"
                        required autocomplete="email" autofocus
                        @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
@@ -26,9 +26,9 @@
                 @enderror
             </label>
 
-            <button type="submit">Verstuur resetlink</button>
+            <button type="submit">{{ __('Send Password Reset Link') }}</button>
         </form>
 
-        <small><a href="{{ route('login') }}">Terug naar inloggen</a></small>
+        <small><a href="{{ route('login') }}">{{ __('Back to login') }}</a></small>
     </article>
 @endsection

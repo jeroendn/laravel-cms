@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Nieuw wachtwoord instellen')
+@section('title', __('Set a new password'))
 
 @section('content')
     <article style="max-width: 30rem; margin-inline: auto;">
-        <h1>Nieuw wachtwoord instellen</h1>
+        <h1>{{ __('Set a new password') }}</h1>
 
         <form method="POST" action="{{ route('password.update') }}">
             @csrf
@@ -12,7 +12,7 @@
             <input type="hidden" name="token" value="{{ $token }}">
 
             <label for="email">
-                E-mailadres
+                {{ __('Email Address') }}
                 <input id="email" type="email" name="email" value="{{ $email ?? old('email') }}"
                        required autocomplete="email" autofocus
                        @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
@@ -22,7 +22,7 @@
             </label>
 
             <label for="password">
-                Nieuw wachtwoord
+                {{ __('New password') }}
                 <input id="password" type="password" name="password"
                        required autocomplete="new-password"
                        @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
@@ -32,12 +32,12 @@
             </label>
 
             <label for="password-confirm">
-                Herhaal nieuw wachtwoord
+                {{ __('Repeat new password') }}
                 <input id="password-confirm" type="password" name="password_confirmation"
                        required autocomplete="new-password">
             </label>
 
-            <button type="submit">Wachtwoord opslaan</button>
+            <button type="submit">{{ __('Save password') }}</button>
         </form>
     </article>
 @endsection

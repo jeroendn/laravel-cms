@@ -10,6 +10,7 @@ parameters:
         - app
         - config
         - database
+        - lang
         - routes
         - tests
         - rector.php

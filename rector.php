@@ -9,6 +9,7 @@ return RectorConfig::configure()
         __DIR__ . '/app',
         __DIR__ . '/config',
         __DIR__ . '/database',
+        __DIR__ . '/lang',
         __DIR__ . '/routes',
         __DIR__ . '/tests',
         __DIR__ . '/rector.php',

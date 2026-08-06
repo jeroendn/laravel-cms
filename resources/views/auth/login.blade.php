@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Inloggen')
+@section('title', __('Login'))
 
 @section('content')
     <article style="max-width: 30rem; margin-inline: auto;">
         <hgroup>
-            <h1>Inloggen</h1>
-            <p>Alleen voor beheerders van {{ config('app.name') }}.</p>
+            <h1>{{ __('Login') }}</h1>
+            <p>{{ __('Administrators only.') }}</p>
         </hgroup>
 
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
             <label for="email">
-                E-mailadres
+                {{ __('Email Address') }}
                 <input id="email" type="email" name="email" value="{{ old('email') }}"
                        required autocomplete="email" autofocus
                        @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
@@ -23,7 +23,7 @@
             </label>
 
             <label for="password">
-                Wachtwoord
+                {{ __('Password') }}
                 <input id="password" type="password" name="password"
                        required autocomplete="current-password"
                        @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
@@ -35,12 +35,12 @@
             <label for="remember">
                 <input id="remember" type="checkbox" name="remember" role="switch"
                        @checked(old('remember'))>
-                Ingelogd blijven
+                {{ __('Remember Me') }}
             </label>
 
-            <button type="submit">Inloggen</button>
+            <button type="submit">{{ __('Login') }}</button>
         </form>
 
-        <small><a href="{{ route('password.request') }}">Wachtwoord vergeten?</a></small>
+        <small><a href="{{ route('password.request') }}">{{ __('Forgot Your Password?') }}</a></small>
     </article>
 @endsection

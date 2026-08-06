@@ -13,12 +13,12 @@
                 <li><strong><a href="{{ route('home') }}" class="contrast">{{ config('app.name') }}</a></strong></li>
             </ul>
             <ul>
-                <li><a href="{{ route('home') }}">Home</a></li>
+                <li><a href="{{ route('home') }}">{{ __('Home') }}</a></li>
                 @auth
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="outline secondary">Uitloggen</button>
+                            <button type="submit" class="outline secondary">{{ __('Logout') }}</button>
                         </form>
                     </li>
                 @endauth

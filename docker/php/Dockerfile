@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* # cleans up the cache
 
 RUN docker-php-ext-install -j"$(nproc)" \
+    bcmath \
     mysqli \
     pdo \
     pdo_mysql
