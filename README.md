@@ -60,8 +60,14 @@ On the server, from the repo checkout:
 ```
 
 Hard-resets to `origin/master`, rebuilds the image, restarts the
-containers, installs prod dependencies, builds assets, runs migrations
-and warms Laravel's caches.
+containers, installs prod dependencies, builds assets, runs migrations,
+warms Laravel's caches and finally makes `storage/` and
+`bootstrap/cache/` writable for Apache.
+
+Those last two stay owned by the deploying user and get their write access
+through the `www-data` group — the repo is bind-mounted, so handing the
+directories to `www-data` outright would lock the deploying user out of the
+tracked `.gitignore` files in them and break the next `git reset --hard`.
 
 In prod's `.env` the `DB_MIGRATIONS_USERNAME`/`DB_MIGRATIONS_PASSWORD`
 vars hold a dedicated DDL user: migrations run as that user, while the

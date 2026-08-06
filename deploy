@@ -42,13 +42,19 @@ sudo docker exec -it $CONTAINER_NAME composer install --no-dev --optimize-autolo
 sudo docker exec -it $CONTAINER_NAME npm ci
 sudo docker exec -it $CONTAINER_NAME npm run build
 
-echo -e "${SUCCESS}Setting writable app directories${NC}"
-sudo docker exec -it $CONTAINER_NAME chown -R www-data:www-data storage bootstrap/cache
-
 echo -e "${SUCCESS}Running database migrations${NC}"
 sudo docker exec -it $CONTAINER_NAME php artisan migrate --force --no-interaction --database=mariadb_migrations
 
 echo -e "${SUCCESS}Caching Laravel config/routes/views${NC}"
 sudo docker exec -it $CONTAINER_NAME php artisan optimize
+
+# Apache runs as www-data, but the repo is bind-mounted: chowning these to
+# www-data would put the tracked .gitignore files in directories this user can
+# no longer unlink, so the next deploy's `git reset --hard` dies on them. Keep
+# ownership here and grant www-data through the group instead. Runs last so it
+# also covers what the steps above wrote as root inside the container.
+echo -e "${SUCCESS}Setting writable app directories${NC}"
+sudo chown -R "$(id -un):www-data" storage bootstrap/cache
+sudo chmod -R g+rwX storage bootstrap/cache
 
 echo -e "${SUCCESS}Deployment finished${NC}"

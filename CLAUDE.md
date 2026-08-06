@@ -52,6 +52,14 @@ A **blog website** for a client, built with Laravel and styled with
 - The repo is bind-mounted over `/var/www/html` (dev AND prod); the image
   stays runtime-only. Deploy = git pull on the server + rebuild/restart
   (`./deploy`).
+- **Writable dirs on prod**: `storage/` and `bootstrap/cache/` stay owned by
+  the deploying user and are handed to Apache through the **group**
+  (`chown -R <user>:www-data` + `chmod -R g+rwX`, last step of `./deploy`).
+  Never `chown -R www-data:www-data` them: because of the bind mount that
+  also takes the tracked `.gitignore` files inside those directories, and the
+  next deploy's `git reset --hard` then aborts with "unable to unlink old …
+  Permission denied" (hit on 2026-08-06). The step runs after
+  `artisan optimize` so it also normalizes what `docker exec` wrote as root.
 
 ### ⚠️ Tooling rule (hard)
 
