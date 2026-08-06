@@ -12,7 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // TLS terminates at the shared Caddy, which proxies to Apache over
+        // plain http. Trust its X-Forwarded-* headers so Laravel generates
+        // https URLs (assets, routes) instead of mixed content. Trusting all
+        // proxies is safe here: the container is only reachable through the
+        // internal Docker network.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

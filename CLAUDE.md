@@ -29,6 +29,11 @@ A **blog website** for a client, built with Laravel and styled with
   `docker/caddy/Caddyfile` reverse-proxies `magnesiumengezondheid.nl` (prod)
   and `magnesium.local` (dev) to `php_magnesium:80`. Apache serves Laravel
   from `public/`.
+- TLS terminates at Caddy; Laravel trusts its `X-Forwarded-*` headers via
+  `trustProxies(at: '*')` in `bootstrap/app.php` (safe: the container is
+  only reachable through the internal Docker network). Without it Laravel
+  generates `http://` asset/route URLs and the browser blocks them as
+  mixed content — no JS runs at all.
 - Database: shared **MariaDB** (`mariadb_docker_server`), own database
   `magnesium`, user `magnesium`. Reachable only within the
   `docker_server_database` network, not from the host. Laravel reads the
@@ -122,14 +127,59 @@ the front door**: it auto-detects context and forwards dev commands into
   `App\Models\User::create(['name' => '…', 'email' => '…', 'password' => '…'])`
   — the `password` cast hashes automatically.
 
-## 6. Tests
+## 6. Blog
+
+- **Model `Post`**: `title`, `slug` (unique, public URL key), `body`
+  (HTML from the editor), `published_at` (null = draft, future =
+  scheduled). `Post::published()` is the public query; `isPublished()`
+  the per-model check.
+- **Public**: `/` lists published posts (newest first, `simplePaginate`),
+  `/blog/{slug}` shows one; drafts and scheduled posts 404 there.
+- **Admin CRUD** at `/admin/posts` (auth middleware on the route group;
+  every authenticated user is an admin). Create/edit share
+  `admin/posts/_form.blade.php`. The slug is generated from the title
+  when left empty (`StorePostRequest::prepareForValidation`); a
+  "Published" switch maps to `published_at` (first publish date is kept
+  when re-saving a published post).
+- **Editor**: **Quill 2** (npm dependency, BSD-3). Deliberately NOT Trix:
+  Trix 2.1.x never gets keyboard input into its document model (text shows
+  in the DOM but nothing is saved) — reproduced with both its ESM and UMD
+  builds; TinyMCE 7 and CKEditor 5 are GPL, unusable for this proprietary
+  project. The snow toolbar is icon-only, so there is no JS-side copy to
+  translate. `app.js` seeds Quill from the hidden `body` input and syncs
+  back on change/submit via `getSemanticHTML()` (with an `&nbsp;`
+  workaround for quill#4509). Quill ships its own complete styling;
+  `app.css` only sets an editor height and keeps the editor surface
+  light in dark mode (Quill has no dark theme). Do NOT theme the toolbar
+  icons with Pico variables: Pico redefines `--pico-color` inside every
+  `<button>`, which turns them white-on-white. No image/attachment
+  support (no upload backend).
+- **Sanitization**: the body is stored as-is and sanitized on output by
+  **stevebauman/purify** (HTMLPurifier) in `Post::bodyHtml()` — the only
+  place `{!! !!}` is allowed.
+- **Known npm audit finding** (accepted): quill 2.0.3 has advisory
+  GHSA-v3m3-f69x-jf25 / CVE-2025-15056 (low, CVSS 2.0) — XSS via the HTML
+  export. There is NO patched release (npm's "fix" is a downgrade to
+  2.0.2, which does not remove the behavior). Already mitigated here: the
+  export is never rendered raw — HTMLPurifier sanitizes on output, covered
+  by `PublicBlogTest::testUnsafeHtmlIsStrippedFromTheBody`. Update quill
+  once a patched version ships.
+- **bladestan gotcha**: standard Blade idioms (`{{ __() }}`, `{{ old() }}`,
+  `@error`'s `$message`) are loosely typed in compiled templates;
+  `phpstan.dist.neon` carries three documented `ignoreErrors` entries for
+  exactly those patterns (scoped to constructs that only exist in compiled
+  templates — real app code is unaffected). Shared partials get an
+  explicit `@php /** @var ... */ @endphp` type hint (see `_form`).
+
+## 7. Tests
 
 Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
-`Auth/PasswordResetTest`) and use `RefreshDatabase` on sqlite `:memory:`.
+`Auth/PasswordResetTest`, `Blog/PublicBlogTest`, `Blog/AdminPostsTest`)
+and use `RefreshDatabase` on sqlite `:memory:`.
 New functionality gets feature tests in the same style; keep phpstan level
 10 clean (fix errors in new code rather than baselining them).
 
-## 7. Quality gate
+## 8. Quality gate
 
 `./develop cqa` → composer normalize + validate, rector, php-cs-fixer
 (`@auto`), phpstan (level 10, larastan + bladestan, baseline in
@@ -144,7 +194,7 @@ touch MariaDB. CI (`.github/workflows/ci.yml`) runs the check variants
 (`rector-check`, `cs-check`, `phpstan`, `phpunit`) on every PR to master,
 with a dummy `APP_KEY` since CI has no `.env`.
 
-## 8. Status / outstanding
+## 9. Status / outstanding
 
 - [x] Base setup: Laravel 13 + Pico CSS, Docker/develop/deploy scripts,
       quality gate green, migrations run against the shared MariaDB
@@ -153,7 +203,9 @@ with a dummy `APP_KEY` since CI has no `.env`.
       registration disabled), with feature tests.
 - [x] Localization: NL via `__()` + `lang/` (English keys, laravel-lang
       framework translations).
-- [ ] Blog functionality: posts (model/migration/controller), admin.
+- [x] Blog functionality: public list/detail + admin CRUD with Quill
+      WYSIWYG and HTMLPurifier output sanitization (see §6), with
+      feature tests.
 - [ ] User management: an admin UI to create accounts / grant others
       access (for now this goes through tinker or a no-password row +
       password reset, see §5).

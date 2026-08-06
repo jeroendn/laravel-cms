@@ -6,6 +6,28 @@ includes:
 parameters:
     level: 10
     tmpDir: tmp/phpstan
+    ignoreErrors:
+        # bladestan analyzes the compiled Blade templates, where standard
+        # Blade idioms are inherently loosely typed and not fixable in the
+        # template source. Two cases are blanket-ignored (e() and the @error
+        # internals only exist in compiled templates, so real app code is
+        # unaffected):
+        # 1. {{ __('...') }} / {{ session(...) }} / {{ old(...) }} feed their
+        #    array|string|mixed return values to Blade's e() escaper.
+        -
+            message: '#^Parameter \#1 \$value of function e expects#'
+            identifier: argument.type
+            reportUnmatched: false
+        # 2. @error blocks compile to code where $message and
+        #    $__messageOriginal are set at runtime but invisible statically.
+        -
+            message: '#\$(message|__messageOriginal)#'
+            identifier: variable.undefined
+            reportUnmatched: false
+        -
+            message: '#\$(message|__messageOriginal) in isset\(\)#'
+            identifier: isset.variable
+            reportUnmatched: false
     paths:
         - app
         - config

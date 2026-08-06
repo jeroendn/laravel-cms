@@ -15,6 +15,7 @@
             <ul>
                 <li><a href="{{ route('home') }}">{{ __('Home') }}</a></li>
                 @auth
+                    <li><a href="{{ route('admin.posts.index') }}">{{ __('Posts') }}</a></li>
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

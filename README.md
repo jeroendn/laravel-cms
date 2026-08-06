@@ -1,4 +1,4 @@
-# Magnesium
+# Magnesium en gezondheid website
 
 Blog website, built with [Laravel](https://laravel.com) and
 [Pico CSS](https://picocss.com).
@@ -7,6 +7,8 @@ Blog website, built with [Laravel](https://laravel.com) and
 
 - **Laravel 13** (PHP 8.5, `php_magnesium` container, php:8.5-apache)
 - **Pico CSS** via Vite (`resources/css/app.css`)
+- **Quill** WYSIWYG editor for writing posts (sanitized on output with
+  HTMLPurifier via stevebauman/purify)
 - **MariaDB** — the shared `mariadb_docker_server` from the sibling
   [DockerServer](../DockerServer) repo, own database `magnesium`
 - **Caddy** — the shared DockerServer Caddy imports
@@ -34,6 +36,14 @@ and the `DB_MIGRATIONS_*` vars — in dev those repeat the regular
 `./develop checkout`. Add `magnesium.local` to your hosts file and
 restart the DockerServer stack once so Caddy picks up the imported
 Caddyfile.
+
+## Blog
+
+Published posts are listed on `/` and shown on `/blog/{slug}`; drafts
+stay hidden. After logging in, posts are managed at `/admin/posts`
+("Artikelen" in the nav): create, edit, publish/unpublish and delete,
+with a WYSIWYG editor. An empty slug field is filled automatically from
+the title.
 
 Admin login lives at `/login` (registration is disabled; the public site
 shows no login link). The migrations bootstrap an admin account
