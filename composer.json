@@ -13,7 +13,8 @@
         "ext-pdo_mysql": "*",
         "jeroendn/php-helpers": "^1.1",
         "laravel/framework": "^13.8",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "laravel/ui": "^4.6"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.52",

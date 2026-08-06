@@ -14,6 +14,14 @@
             </ul>
             <ul>
                 <li><a href="{{ route('home') }}">Home</a></li>
+                @auth
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="outline secondary">Uitloggen</button>
+                        </form>
+                    </li>
+                @endauth
             </ul>
         </nav>
     </header>

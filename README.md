@@ -33,6 +33,17 @@ First-time setup: copy `.env.example` to `.env`, fill in `DB_PASSWORD`
 restart the DockerServer stack once so Caddy picks up the imported
 Caddyfile.
 
+Admin login lives at `/login` (registration is disabled; the public site
+shows no login link). The migrations bootstrap an admin account
+(`info@jeroendn.nl`) **without a usable password**: set one through
+"Wachtwoord vergeten" (`/password/reset`). With `MAIL_MAILER=log` the
+reset link ends up in `storage/logs/laravel.log`. Additional accounts go
+through `./develop artisan tinker`:
+
+```php
+App\Models\User::create(['name' => '…', 'email' => '…', 'password' => '…']);
+```
+
 ## Quality gate
 
 `./develop cqa` runs composer normalize + validate, rector, php-cs-fixer,

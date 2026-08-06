@@ -68,7 +68,39 @@ the front door**: it auto-detects context and forwards dev commands into
   (header/nav, `container` classes, `@vite`); pages extend it
   (`resources/views/home.blade.php`).
 
-## 4. Quality gate
+## 4. Authentication
+
+- **laravel/ui** (fleet standard, same as jeroendn-website):
+  `Auth::routes()` in `routes/web.php` + controllers in
+  `app/Http/Controllers/Auth/`. **Registration, e-mail verification and
+  password confirmation are disabled on purpose** (client blog — only
+  admins log in); the unused controllers are deleted. Login/logout +
+  password reset remain, with Pico-styled views under
+  `resources/views/auth/`. **The public site shows no login link** —
+  admins navigate to `/login` directly; only the logout button is shown
+  to authenticated users.
+- The laravel/ui stubs' `$this->middleware()` constructor calls don't
+  exist in modern Laravel — controllers implement `HasMiddleware` with a
+  static `middleware()` method instead (see `LoginController`).
+- The first admin (`info@jeroendn.nl`) is bootstrapped by a **data
+  migration** (`2026_08_06_084152_create_admin_user`) without a usable
+  password (random hash — the column is not nullable); the admin gains
+  access via the password-reset flow. In dev (`MAIL_MAILER=log`) the reset
+  link lands in `storage/logs/laravel.log`; prod needs working `MAIL_*`
+  settings in `.env` before the reset mail can arrive.
+- Additional accounts are created by hand (no UI for it yet):
+  `./develop artisan tinker`, then
+  `App\Models\User::create(['name' => '…', 'email' => '…', 'password' => '…'])`
+  — the `password` cast hashes automatically.
+
+## 5. Tests
+
+Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
+`Auth/PasswordResetTest`) and use `RefreshDatabase` on sqlite `:memory:`.
+New functionality gets feature tests in the same style; keep phpstan level
+10 clean (fix errors in new code rather than baselining them).
+
+## 6. Quality gate
 
 `./develop cqa` → composer normalize + validate, rector, php-cs-fixer
 (`@auto`), phpstan (level 10, larastan + bladestan, baseline in
@@ -83,10 +115,14 @@ touch MariaDB. CI (`.github/workflows/ci.yml`) runs the check variants
 (`rector-check`, `cs-check`, `phpstan`, `phpunit`) on every PR to master,
 with a dummy `APP_KEY` since CI has no `.env`.
 
-## 5. Status / outstanding
+## 7. Status / outstanding
 
 - [x] Base setup: Laravel 13 + Pico CSS, Docker/develop/deploy scripts,
-      quality gate green, migrations run against the shared MariaDB.
+      quality gate green, migrations run against the shared MariaDB
+      (committed).
+- [x] Authentication: login/logout + password reset (laravel/ui,
+      registration disabled), with feature tests.
 - [ ] Blog functionality: posts (model/migration/controller), admin.
-      **Not started yet on purpose** — the initial setup gets committed
-      first.
+- [ ] User management: an admin UI to create accounts / grant others
+      access (for now this goes through tinker or a no-password row +
+      password reset, see §4).
