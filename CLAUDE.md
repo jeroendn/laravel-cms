@@ -184,6 +184,14 @@ and the `isPublished()` boundaries); it still extends `Tests\TestCase`
 New functionality gets feature tests in the same style; keep phpstan level
 10 clean (fix errors in new code rather than baselining them).
 
+`Tests\TestCase::setUp()` calls **`withoutVite()`** for every test: the
+layout's `@vite` directive needs `public/build/manifest.json`, which is a
+gitignored build artifact. Locally it happens to exist (`./develop
+checkout`), on CI it does not — without this, every test that renders a page
+dies with a 500 (`ViteManifestNotFoundException`). The `assets` job guards
+the real build. Simulate CI locally with
+`mv public/build /tmp/b && ./develop composer phpunit; mv /tmp/b public/build`.
+
 **Never leave a testsuite directory empty**: git does not track empty
 directories, so the directory is missing on CI and PHPUnit aborts the whole
 run with `Test directory "…" not found` (exit code 2) — green locally, red
