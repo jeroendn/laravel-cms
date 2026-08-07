@@ -27,58 +27,33 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <a href="{{ route('home') }}" class="navbar-brand">
-                    {{ config('app.name') }}
-                </a>
-
-                @auth
-                    <div class="navbar-nav flex-row order-md-last align-items-center">
-                        <div class="nav-item ms-2">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="btn btn-outline-secondary">{{ __('Logout') }}</button>
-                            </form>
-                        </div>
-                    </div>
-                @endauth
+                @adminArea
+                    <a href="{{ route('admin.posts.index') }}" class="navbar-brand me-auto">
+                        <span class="d-none d-md-inline">{{ config('app.name') }}</span>
+                        <span class="badge bg-warning text-dark ms-md-2">{{ __('Admin area') }}</span>
+                    </a>
+                @else
+                    <a href="{{ route('home') }}" class="navbar-brand me-auto">
+                        {{ config('app.name') }}
+                    </a>
+                @endadminArea
             </div>
         </header>
 
-        <header class="navbar-expand-md">
+        <header class="navbar-expand-md d-print-none">
             <div class="collapse navbar-collapse" id="navbar-menu">
                 <div class="navbar">
                     <div class="container-xl">
-                        <ul class="navbar-nav">
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('home') }}">{{ __('Home') }}</a>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"
-                                   role="button" aria-expanded="false">{{ __('Posts') }}</a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="#">{{ __('Placeholder') }}</a>
-                                    <a class="dropdown-item" href="#">{{ __('Placeholder') }}</a>
-                                    <a class="dropdown-item" href="#">{{ __('Placeholder') }}</a>
-                                </div>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"
-                                   role="button" aria-expanded="false">{{ __('Placeholder') }}</a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="#">{{ __('Placeholder') }}</a>
-                                    <a class="dropdown-item" href="#">{{ __('Placeholder') }}</a>
-                                    <a class="dropdown-item" href="#">{{ __('Placeholder') }}</a>
-                                </div>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"
-                                   role="button" aria-expanded="false">{{ __('Placeholder') }}</a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="#">{{ __('Placeholder') }}</a>
-                                    <a class="dropdown-item" href="#">{{ __('Placeholder') }}</a>
-                                    <a class="dropdown-item" href="#">{{ __('Placeholder') }}</a>
-                                </div>
-                            </li>
+                        <ul class="navbar-nav w-100">
+                            @adminArea
+                                @include('partials.nav-admin')
+                            @else
+                                @include('partials.nav-public')
+                            @endadminArea
+
+                            @auth
+                                @include('partials.nav-account')
+                            @endauth
                         </ul>
                     </div>
                 </div>
@@ -99,5 +74,9 @@
             </footer>
         </div>
     </div>
+
+    @adminArea
+        <div class="admin-frame border border-3 border-warning pe-none d-print-none"></div>
+    @endadminArea
 </body>
 </html>

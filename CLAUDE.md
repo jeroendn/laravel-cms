@@ -148,11 +148,28 @@ the front door**: it auto-detects context and forwards dev commands into
 - Blade: `resources/views/layouts/app.blade.php` is the base layout; pages
   extend it (`resources/views/home.blade.php`).
 - **Header**: Tabler's horizontal layout — a first `navbar` holding the
-  brand (plus the logout button, `order-md-last`, when logged in) and a
-  second one holding the menu row underneath it. The `navbar-toggler`
-  collapses the menu row into a burger menu below `md` for free. The public
-  menu is **placeholder copy** (`Home` + three dropdowns with `href="#"`),
-  waiting on the client's real site structure.
+  brand and a second one holding the menu row underneath it. The
+  `navbar-toggler` collapses the menu row into a burger menu below `md` for
+  free. The menu row is one `navbar-nav`, filled from
+  `partials/nav-public.blade.php` or `partials/nav-admin.blade.php`, with
+  `partials/nav-account.blade.php` (avatar dropdown: switch site ⇄ admin,
+  logout) appended for authenticated users. That partial is **last in the
+  list on purpose**: `ms-md-auto` right-aligns it once the row is
+  horizontal, and in the burger menu it lands at the bottom. The public menu
+  is **placeholder copy** (`Home` + three dropdowns with `href="#"`),
+  waiting on the client's real site structure; the admin menu is just
+  `Posts` for now.
+- **Admin area is visually marked**: a fixed warning-coloured frame around
+  the viewport (`.admin-frame`, the one thing Tabler utilities cannot
+  express — `position: fixed` + `inset` + a z-index above modals) and a
+  warning badge next to the brand. Below `md` the badge **replaces** the
+  site name; side by side they overflow a 375px viewport.
+- Both hang off `@adminArea`, a `Blade::if()` registered in
+  `AppServiceProvider` — not a controller variable, because the same layout
+  also serves the auth views that laravel/ui's own controllers render. A
+  directive rather than a view composer keeps bladestan happy too: it only
+  knows the variables it sees in `view()` calls, so a composer-supplied one
+  is reported as undefined in every template that touches it.
 
 ## 4. Localization
 

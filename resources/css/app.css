@@ -36,3 +36,9 @@
 .is-invalid > .ql-container.ql-snow {
     border-color: var(--tblr-danger);
 }
+
+.admin-frame {
+    position: fixed;
+    inset: 0;
+    z-index: 1090;
+}

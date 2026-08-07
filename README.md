@@ -44,8 +44,10 @@ Caddyfile.
 Published posts are listed on `/` and shown on `/blog/{slug}`; drafts
 stay hidden. After logging in, posts are managed at `/admin/posts`:
 create, edit, publish/unpublish and delete, with a WYSIWYG editor. An
-empty slug field is filled automatically from the title. There is no
-link to it in the nav — browse to the URL directly.
+empty slug field is filled automatically from the title. Logged-in users
+switch between the public site and the admin area through the account
+menu on the right of the nav bar; the admin area has its own menu, a
+warning-coloured frame around the page and a badge next to the site name.
 
 Admin login lives at `/login` (registration is disabled; the public site
 shows no login link). The migrations bootstrap an admin account
