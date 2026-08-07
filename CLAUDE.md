@@ -10,15 +10,15 @@ This file is loaded automatically as context.
 > the README stays the short practical front door (stack, commands, setup).
 > Bump the "Last updated" date below on every change.
 >
-> Last updated: 2026-08-06
+> Last updated: 2026-08-07
 
 ---
 
 ## 1. What this is
 
 A **blog website** for a client, built with Laravel and styled with
-**Pico CSS**. Currently a freshly scaffolded base: the blog functionality
-(posts, admin) is still to be built.
+**Tabler** (Bootstrap 5). Currently a freshly scaffolded base: the blog
+functionality (posts, admin) is still to be built.
 
 ## 2. Architecture & environment
 
@@ -82,7 +82,9 @@ visitors get a raw **500** for the whole deploy (measured 2026-08-06):
   with `vendor/` moved away entirely the page still returns a clean 503.
 - `resources/views/errors/503.blade.php` must stay **fully self-contained** —
   no `@vite`, no external fonts/images, inline `<style>` only. It mirrors
-  Pico's default light/dark palette by hand. `MaintenancePageTest` guards this.
+  Tabler's light/dark palette by hand — and on `prefers-color-scheme`, since
+  Tabler's own `[data-bs-theme]` switch would need the JS this page cannot
+  load either. `MaintenancePageTest` guards this.
 - The prerender runs **before** the git pull, so it uses the *previous*
   revision of the view: a change to the maintenance page only shows up from
   the next deploy onwards.
@@ -113,14 +115,44 @@ the front door**: it auto-detects context and forwards dev commands into
 
 ## 3. Frontend
 
-- **Pico CSS** (`@picocss/pico`, npm dev dependency), imported in
-  `resources/css/app.css`, bundled by Vite (`npm run build` — there is no
-  Vite dev-server setup; rebuild after asset changes).
-- Customization goes through Pico's CSS custom properties in `app.css` —
-  no utility classes, mostly semantic HTML.
-- Blade: `resources/views/layouts/app.blade.php` is the base layout
-  (header/nav, `container` classes, `@vite`); pages extend it
-  (`resources/views/home.blade.php`).
+- **Tabler** (`@tabler/core`, MIT), imported in `resources/css/app.css`,
+  bundled by Vite (`npm run build` — there is no Vite dev-server setup;
+  rebuild after asset changes). Replaced Pico CSS on 2026-08-07: Pico is
+  classless and deliberately minimal, and every layout wish (branded
+  header, dropdown menu, burger menu) turned into hand-written CSS that
+  fought the framework. Tabler ships all of that as components. The price
+  is bundle size — 70 kB gzipped CSS + 74 kB JS against Pico's 15 + 59.
+- Tabler is a **Bootstrap 5 theme**, so it is utility-class driven: styling
+  goes through Bootstrap/Tabler classes in the Blade templates, and only
+  what those cannot express belongs in `app.css` (currently just the Quill
+  overrides). Customization happens through the `--tblr-*` custom properties.
+- **Tabler's own JS bundle is not used** — it only carries widgets we do not
+  have (autosize, theme switcher). `app.js` imports `bootstrap/js/dist/collapse`
+  and `.../dropdown` instead; importing them registers their data-attribute
+  handlers, so the navbar needs no glue code. `bootstrap` is therefore a
+  direct dependency in `package.json`, not a transitive one.
+- **Icons**: **Font Awesome Free 7** (`@fortawesome/fontawesome-free`,
+  CC-BY-4.0 + OFL-1.1 + MIT — fine for this proprietary project, unlike the
+  GPL editors in §6). `app.css` imports only `fontawesome.css` + `solid.css`:
+  `all.css` would drag in the brands (115 kB) and regular (19 kB) webfonts
+  too. Markup is `<i class="fa-solid fa-…" aria-hidden="true">`; add
+  `brands.css` if social icons ever land. Tabler's own icon set is not used.
+  The icons are CC-BY-4.0, which asks for attribution; **the site deliberately
+  shows none** (decided 2026-08-07). Vite also strips Font Awesome's license
+  banner when it minifies, so nothing credits it anywhere. If that ever needs
+  to change, keeping the banner in the build is cheaper than a visible line.
+- **Dark mode**: Pico switched on `prefers-color-scheme`, Tabler themes on
+  `[data-bs-theme]`. The layout sets that attribute from the OS preference in
+  an inline `<head>` script, before the stylesheet loads, so the behaviour is
+  unchanged and there is no flash of the wrong theme.
+- Blade: `resources/views/layouts/app.blade.php` is the base layout; pages
+  extend it (`resources/views/home.blade.php`).
+- **Header**: Tabler's horizontal layout — a first `navbar` holding the
+  brand (plus the logout button, `order-md-last`, when logged in) and a
+  second one holding the menu row underneath it. The `navbar-toggler`
+  collapses the menu row into a burger menu below `md` for free. The public
+  menu is **placeholder copy** (`Home` + three dropdowns with `href="#"`),
+  waiting on the client's real site structure.
 
 ## 4. Localization
 
@@ -147,7 +179,7 @@ the front door**: it auto-detects context and forwards dev commands into
   `app/Http/Controllers/Auth/`. **Registration, e-mail verification and
   password confirmation are disabled on purpose** (client blog — only
   admins log in); the unused controllers are deleted. Login/logout +
-  password reset remain, with Pico-styled views under
+  password reset remain, with Tabler-styled views under
   `resources/views/auth/`. **The public site shows no login link** —
   admins navigate to `/login` directly; only the logout button is shown
   to authenticated users.
@@ -186,12 +218,23 @@ the front door**: it auto-detects context and forwards dev commands into
   project. The snow toolbar is icon-only, so there is no JS-side copy to
   translate. `app.js` seeds Quill from the hidden `body` input and syncs
   back on change/submit via `getSemanticHTML()` (with an `&nbsp;`
-  workaround for quill#4509). Quill ships its own complete styling;
-  `app.css` only sets an editor height and keeps the editor surface
-  light in dark mode (Quill has no dark theme). Do NOT theme the toolbar
-  icons with Pico variables: Pico redefines `--pico-color` inside every
-  `<button>`, which turns them white-on-white. No image/attachment
-  support (no upload backend).
+  workaround for quill#4509). Quill ships its own complete styling; the four
+  rules in `app.css` are all that is left (measured 2026-08-07 by deleting
+  each one in the browser — a fifth, `color: inherit` on the editor's block
+  elements, was a Pico artefact and had no effect under Tabler):
+  a `min-height` (without it the editor collapses to 42px, since Quill sets
+  `height: 100%` on an auto-height parent), a white surface, Tabler's border
+  radius, and the `is-invalid` border. **The surface must stay light** — not
+  because the text would be unreadable (Tabler's light body color on the dark
+  card is fine) but because Quill hard-codes its toolbar icons to `#444`
+  stroke/fill, which vanish on a dark background.
+  Quill turns `#body-editor` into `.ql-container` and inserts `.ql-toolbar`
+  as a **sibling**, so `_form.blade.php` puts the `is-invalid` class on a
+  wrapper around it — on the editor itself only half of it would get the
+  error border. Its editable div ships without a role or a name, so `app.js`
+  sets `role="textbox"` + `aria-labelledby` on it; the visible "Content" label
+  is a `<div>`, because a `<label>` could only point at the hidden input.
+  No image/attachment support (no upload backend).
 - **Sanitization**: the body is stored as-is and sanitized on output by
   **stevebauman/purify** (HTMLPurifier) in `Post::bodyHtml()` — the only
   place `{!! !!}` is allowed.
@@ -254,7 +297,7 @@ with a dummy `APP_KEY` since CI has no `.env`.
 
 ## 9. Status / outstanding
 
-- [x] Base setup: Laravel 13 + Pico CSS, Docker/develop/deploy scripts,
+- [x] Base setup: Laravel 13 + Tabler, Docker/develop/deploy scripts,
       quality gate green, migrations run against the shared MariaDB
       (committed).
 - [x] Authentication: login/logout + password reset (laravel/ui,
@@ -266,6 +309,8 @@ with a dummy `APP_KEY` since CI has no `.env`.
       feature tests.
 - [x] Maintenance page: branded, self-contained 503 prerendered by `./deploy`
       instead of the raw 500 visitors used to get (see §2).
+- [ ] Real menu structure: the header nav is placeholder copy with `#`
+      links until the client delivers the site structure (see §3).
 - [ ] User management: an admin UI to create accounts / grant others
       access (for now this goes through tinker or a no-password row +
       password reset, see §5).

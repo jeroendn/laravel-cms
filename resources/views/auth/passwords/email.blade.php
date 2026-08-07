@@ -3,32 +3,40 @@
 @section('title', __('Reset Password'))
 
 @section('content')
-    <article style="max-width: 30rem; margin-inline: auto;">
-        <hgroup>
-            <h1>{{ __('Reset Password') }}</h1>
-            <p>{{ __('Enter your e-mail address and you will receive a link to set a new password.') }}</p>
-        </hgroup>
+    <div class="card card-md mx-auto" style="max-width: 30rem;">
+        <div class="card-body">
+            <h1 class="card-title">{{ __('Reset Password') }}</h1>
+            <p class="text-secondary">
+                {{ __('Enter your e-mail address and you will receive a link to set a new password.') }}
+            </p>
 
-        @if (session('status'))
-            <p>{{ session('status') }}</p>
-        @endif
+            @if (session('status'))
+                <div class="alert alert-success">{{ session('status') }}</div>
+            @endif
 
-        <form method="POST" action="{{ route('password.email') }}">
-            @csrf
+            <form method="POST" action="{{ route('password.email') }}">
+                @csrf
 
-            <label for="email">
-                {{ __('Email Address') }}
-                <input id="email" type="email" name="email" value="{{ old('email') }}"
-                       required autocomplete="email" autofocus
-                       @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
-                @error('email')
-                    <small id="email-error">{{ $message }}</small>
-                @enderror
-            </label>
+                <div class="mb-3">
+                    <label class="form-label" for="email">{{ __('Email Address') }}</label>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}"
+                           class="form-control @error('email') is-invalid @enderror"
+                           required autocomplete="email" autofocus>
+                    @error('email')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
 
-            <button type="submit">{{ __('Send Password Reset Link') }}</button>
-        </form>
+                <div class="form-footer">
+                    <button type="submit" class="btn btn-primary w-100">
+                        {{ __('Send Password Reset Link') }}
+                    </button>
+                </div>
+            </form>
+        </div>
 
-        <small><a href="{{ route('login') }}">{{ __('Back to login') }}</a></small>
-    </article>
+        <div class="card-footer text-center">
+            <a href="{{ route('login') }}">{{ __('Back to login') }}</a>
+        </div>
+    </div>
 @endsection

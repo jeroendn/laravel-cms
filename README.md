@@ -1,12 +1,14 @@
 # Magnesium en gezondheid website
 
 Blog website, built with [Laravel](https://laravel.com) and
-[Pico CSS](https://picocss.com).
+[Tabler](https://tabler.io).
 
 ## Stack
 
 - **Laravel 13** (PHP 8.5, `php_magnesium` container, php:8.5-apache)
-- **Pico CSS** via Vite (`resources/css/app.css`)
+- **Tabler** (Bootstrap 5) via Vite (`resources/css/app.css`); only
+  Bootstrap's collapse + dropdown JS is bundled, not Tabler's own bundle
+- **Font Awesome Free 7** for icons (solid style only)
 - **Quill** WYSIWYG editor for writing posts (sanitized on output with
   HTMLPurifier via stevebauman/purify)
 - **MariaDB** — the shared `mariadb_docker_server` from the sibling
@@ -40,10 +42,10 @@ Caddyfile.
 ## Blog
 
 Published posts are listed on `/` and shown on `/blog/{slug}`; drafts
-stay hidden. After logging in, posts are managed at `/admin/posts`
-("Artikelen" in the nav): create, edit, publish/unpublish and delete,
-with a WYSIWYG editor. An empty slug field is filled automatically from
-the title.
+stay hidden. After logging in, posts are managed at `/admin/posts`:
+create, edit, publish/unpublish and delete, with a WYSIWYG editor. An
+empty slug field is filled automatically from the title. There is no
+link to it in the nav — browse to the URL directly.
 
 Admin login lives at `/login` (registration is disabled; the public site
 shows no login link). The migrations bootstrap an admin account

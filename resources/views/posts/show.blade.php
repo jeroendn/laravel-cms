@@ -3,17 +3,15 @@
 @section('title', $post->title)
 
 @section('content')
-    <article>
-        <header>
-            <hgroup>
-                <h1>{{ $post->title }}</h1>
-                <p><small>{{ $post->published_at?->translatedFormat('j F Y') }}</small></p>
-            </hgroup>
-        </header>
+    <article class="card">
+        <div class="card-body">
+            <h1 class="card-title mb-1">{{ $post->title }}</h1>
+            <div class="text-secondary mb-4">{{ $post->published_at?->translatedFormat('j F Y') }}</div>
 
-        {{-- body_html is sanitized by HTMLPurifier (see Post::bodyHtml). --}}
-        {!! $post->body_html !!}
+            {{-- body_html is sanitized by HTMLPurifier (see Post::bodyHtml). --}}
+            {!! $post->body_html !!}
 
-        <footer><a href="{{ route('home') }}">{{ __('Back to overview') }}</a></footer>
+            <p class="mt-4 mb-0"><a href="{{ route('home') }}">{{ __('Back to overview') }}</a></p>
+        </div>
     </article>
 @endsection
