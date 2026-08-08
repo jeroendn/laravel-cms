@@ -1,4 +1,28 @@
+// The navbar's dropdowns and burger menu. Importing them registers their
+// data-attribute handlers; Tabler's own bundle only adds widgets we don't use.
+import 'bootstrap/js/dist/collapse';
+import 'bootstrap/js/dist/dropdown';
+import Toast from 'bootstrap/js/dist/toast';
 import Quill from 'quill';
+
+document.querySelectorAll('.toast').forEach((el) => Toast.getOrCreateInstance(el).show());
+document.querySelectorAll('.toast-progress').forEach((bar) => {
+    bar.addEventListener('animationend', () => Toast.getOrCreateInstance(bar.closest('.toast')).hide());
+});
+
+const resetLink = document.getElementById('reset-link');
+const resetLinkCopy = document.getElementById('reset-link-copy');
+
+if (resetLink && resetLinkCopy) {
+    const icon = resetLinkCopy.querySelector('i');
+
+    resetLinkCopy.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(resetLink.value);
+
+        icon.className = 'fa-solid fa-check';
+        setTimeout(() => icon.className = 'fa-solid fa-copy', 2000);
+    });
+}
 
 // WYSIWYG editor for the admin post form. The toolbar is icon-only, so it
 // involves no translatable copy.
@@ -19,6 +43,12 @@ if (editorElement) {
             ],
         },
     });
+
+    // Quill leaves its editable div unlabelled and roleless; without this the
+    // field has no accessible name (the visible one is a <div>, not a <label>).
+    quill.root.setAttribute('role', 'textbox');
+    quill.root.setAttribute('aria-multiline', 'true');
+    quill.root.setAttribute('aria-labelledby', 'body-label');
 
     // Seed the editor from the hidden input (existing post, or old() input
     // after a failed validation round-trip).

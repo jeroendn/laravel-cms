@@ -59,6 +59,11 @@ class Post extends Model
         return $this->published_at !== null && $this->published_at->lte(now());
     }
 
+    public function isScheduled(): bool
+    {
+        return $this->published_at !== null && $this->published_at->gt(now());
+    }
+
     /**
      * The body (HTML from the WYSIWYG editor) sanitized by HTMLPurifier,
      * so the result is safe to output unescaped.

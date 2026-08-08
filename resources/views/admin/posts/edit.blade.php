@@ -1,16 +1,27 @@
 @extends('layouts.app')
 
-@section('title', __('Edit post'))
+@section('title', __('Edit :name', ['name' => __('post')]))
+
+@section('back')
+    @include('partials.back-link', ['url' => route('admin.posts.index')])
+@endsection
 
 @section('content')
-    <h1>{{ __('Edit post') }}</h1>
+    <div class="page-header d-print-none">
+        <h1 class="page-title">{{ __('Edit :name', ['name' => __('post')]) }}</h1>
+    </div>
 
     <form method="POST" action="{{ route('admin.posts.update', $post) }}">
         @csrf
         @method('PUT')
-        @include('admin.posts._form', ['post' => $post])
-        <button type="submit">{{ __('Save') }}</button>
-    </form>
 
-    <a href="{{ route('admin.posts.index') }}">{{ __('Back to overview') }}</a>
+        <div class="card">
+            <div class="card-body">
+                @include('admin.posts._form', ['post' => $post])
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
+            </div>
+        </div>
+    </form>
 @endsection

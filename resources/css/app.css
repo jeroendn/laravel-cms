@@ -1,18 +1,33 @@
-@import '@picocss/pico';
+@import '@tabler/core/dist/css/tabler.css';
 @import 'quill/dist/quill.snow.css';
 
-/*
- * Project-specific overrides go below. Pico is configured entirely through
- * CSS custom properties, e.g.:
- *
- * :root {
- *     --pico-primary: #2c7a4b;
- * }
- */
+/* Only the solid style: all.css would also pull in the brands (115 kB) and
+   regular (19 kB) webfonts. Add brands.css here if social icons ever land. */
+@import '@fortawesome/fontawesome-free/css/fontawesome.css';
+@import '@fortawesome/fontawesome-free/css/solid.css';
 
-/* Quill WYSIWYG editor (admin post form). Quill ships its own complete
-   (light) styling; only give it a workable height, and keep the editor
-   surface light in dark mode too — Quill has no dark theme. */
+/* Tabler maps --tblr-link-color onto --tblr-primary, so the primary doubles as
+   link text. The dark variant exists because the light one only reaches 3.2:1
+   on the dark body; being that much lighter, it in turn needs a dark button
+   foreground instead of Tabler's white. Everything else (hover, subtle
+   backgrounds, focus rings) is color-mixed from these by Tabler itself. */
+:root {
+    --tblr-primary: #0f766e;
+    --tblr-primary-rgb: 15, 118, 110;
+}
+
+[data-bs-theme=dark] {
+    --tblr-primary: #14b8a6;
+    --tblr-primary-rgb: 20, 184, 166;
+    --tblr-primary-fg: var(--tblr-gray-900);
+}
+
+/* Quill (admin post form) ships its own complete styling; these are the only
+   places it does not survive contact with Tabler.
+
+   The surface has to stay light in dark mode: Quill's toolbar icons are
+   hard-coded to #444 (stroke/fill in quill.snow.css), so on Tabler's dark card
+   they disappear. Quill has no dark theme to switch to. */
 .ql-editor {
     min-height: 15rem;
 }
@@ -23,9 +38,44 @@
     color: #444;
 }
 
-/* In dark mode Pico gives headings/paragraphs a light text color, which is
-   unreadable on the editor's white surface; make them inherit the editor
-   color instead (links keep their own styling). */
-.ql-editor :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) {
-    color: inherit;
+.ql-toolbar.ql-snow {
+    border-top-left-radius: var(--tblr-border-radius);
+    border-top-right-radius: var(--tblr-border-radius);
+}
+
+.ql-container.ql-snow {
+    border-bottom-right-radius: var(--tblr-border-radius);
+    border-bottom-left-radius: var(--tblr-border-radius);
+}
+
+.is-invalid > .ql-toolbar.ql-snow,
+.is-invalid > .ql-container.ql-snow {
+    border-color: var(--tblr-danger);
+}
+
+/* The flash toast's countdown bar. app.js hides the toast when this animation
+   ends (Bootstrap's own autohide timer is off), so the bar and the hide moment
+   cannot drift apart — also not while hovering/focusing pauses the countdown. */
+.toast-progress {
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.5);
+    transform-origin: left;
+    animation: toast-progress 15s linear forwards;
+}
+
+.toast:hover .toast-progress,
+.toast:focus-within .toast-progress {
+    animation-play-state: paused;
+}
+
+@keyframes toast-progress {
+    to {
+        transform: scaleX(0);
+    }
+}
+
+.admin-frame {
+    position: fixed;
+    inset: 0;
+    z-index: 1090;
 }

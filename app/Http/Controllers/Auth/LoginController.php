@@ -22,12 +22,10 @@ class LoginController extends Controller implements HasMiddleware
 
     use AuthenticatesUsers;
 
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/';
+    protected function redirectTo(): string
+    {
+        return route('admin.dashboard');
+    }
 
     public static function middleware(): array
     {

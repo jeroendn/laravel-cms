@@ -7,9 +7,24 @@ use Illuminate\Contracts\View\View;
 
 class PostController extends Controller
 {
-    public function index(): View
+    /**
+     * How many posts the home page teases before pointing at the archive.
+     */
+    private const int RECENT = 5;
+
+    public function home(): View
     {
         return view('home', [
+            'posts' => Post::published()
+                ->latest('published_at')
+                ->take(self::RECENT)
+                ->get(),
+        ]);
+    }
+
+    public function index(): View
+    {
+        return view('posts.index', [
             'posts' => Post::published()
                 ->latest('published_at')
                 ->simplePaginate(10),

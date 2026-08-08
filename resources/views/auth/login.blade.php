@@ -3,44 +3,48 @@
 @section('title', __('Login'))
 
 @section('content')
-    <article style="max-width: 30rem; margin-inline: auto;">
-        <hgroup>
-            <h1>{{ __('Login') }}</h1>
-            <p>{{ __('Administrators only.') }}</p>
-        </hgroup>
+    <div class="card card-md mx-auto" style="max-width: 30rem;">
+        <div class="card-body">
+            <h1 class="card-title">{{ __('Login') }}</h1>
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
+                <div class="mb-3">
+                    <label class="form-label" for="email">{{ __('Email Address') }}</label>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}"
+                           class="form-control @error('email') is-invalid @enderror"
+                           required autocomplete="email" autofocus>
+                    @error('email')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
 
-            <label for="email">
-                {{ __('Email Address') }}
-                <input id="email" type="email" name="email" value="{{ old('email') }}"
-                       required autocomplete="email" autofocus
-                       @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
-                @error('email')
-                    <small id="email-error">{{ $message }}</small>
-                @enderror
-            </label>
+                <div class="mb-3">
+                    <label class="form-label" for="password">{{ __('Password') }}</label>
+                    <input id="password" type="password" name="password"
+                           class="form-control @error('password') is-invalid @enderror"
+                           required autocomplete="current-password">
+                    @error('password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
 
-            <label for="password">
-                {{ __('Password') }}
-                <input id="password" type="password" name="password"
-                       required autocomplete="current-password"
-                       @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
-                @error('password')
-                    <small id="password-error">{{ $message }}</small>
-                @enderror
-            </label>
+                <div class="mb-3">
+                    <label class="form-check form-switch">
+                        <input id="remember" class="form-check-input" type="checkbox" name="remember"
+                               @checked(old('remember'))>
+                        <span class="form-check-label">{{ __('Remember Me') }}</span>
+                    </label>
+                </div>
 
-            <label for="remember">
-                <input id="remember" type="checkbox" name="remember" role="switch"
-                       @checked(old('remember'))>
-                {{ __('Remember Me') }}
-            </label>
+                <div class="form-footer">
+                    <button type="submit" class="btn btn-primary w-100">{{ __('Login') }}</button>
+                </div>
+            </form>
+        </div>
 
-            <button type="submit">{{ __('Login') }}</button>
-        </form>
-
-        <small><a href="{{ route('password.request') }}">{{ __('Forgot Your Password?') }}</a></small>
-    </article>
+        <div class="card-footer text-center">
+            <a href="{{ route('password.request') }}">{{ __('Forgot Your Password?') }}</a>
+        </div>
+    </div>
 @endsection

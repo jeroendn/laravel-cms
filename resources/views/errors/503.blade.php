@@ -9,18 +9,18 @@
     <style>
         :root {
             color-scheme: light dark;
-            --background-color: #fff;
-            --color: #373c44;
-            --muted-color: #646b79;
-            --primary: #0172ad;
+            --background-color: #f9fafb;
+            --color: #1f2937;
+            --muted-color: rgba(31, 41, 55, 0.75);
+            --primary: #0f766e;
         }
 
         @media only screen and (prefers-color-scheme: dark) {
             :root {
-                --background-color: rgb(19, 22.5, 30.5);
-                --color: #c2c7d0;
-                --muted-color: #7b8495;
-                --primary: #01aaff;
+                --background-color: #111827;
+                --color: #e5e7eb;
+                --muted-color: rgba(229, 231, 235, 0.75);
+                --primary: #14b8a6;
             }
         }
 

@@ -29,12 +29,12 @@ class PostController extends Controller
     {
         Post::create([
             ...$request->safe(['title', 'slug', 'body']),
-            'published_at' => $request->boolean('published') ? now() : null,
+            'published_at' => $request->date('published_at'),
         ]);
 
         return redirect()
             ->route('admin.posts.index')
-            ->with('status', __('Post created.'));
+            ->with('status', __(':Name created.', ['name' => __('post')]));
     }
 
     public function edit(Post $post): View
@@ -46,13 +46,12 @@ class PostController extends Controller
     {
         $post->update([
             ...$request->safe(['title', 'slug', 'body']),
-            // Keep the original publication date when the post stays published.
-            'published_at' => $request->boolean('published') ? $post->published_at ?? now() : null,
+            'published_at' => $request->date('published_at'),
         ]);
 
         return redirect()
             ->route('admin.posts.index')
-            ->with('status', __('Post updated.'));
+            ->with('status', __(':Name updated.', ['name' => __('post')]));
     }
 
     public function destroy(Post $post): RedirectResponse
@@ -61,6 +60,6 @@ class PostController extends Controller
 
         return redirect()
             ->route('admin.posts.index')
-            ->with('status', __('Post deleted.'));
+            ->with('status', __(':Name deleted.', ['name' => __('post')]));
     }
 }

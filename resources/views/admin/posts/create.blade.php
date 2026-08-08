@@ -2,14 +2,25 @@
 
 @section('title', __('New post'))
 
+@section('back')
+    @include('partials.back-link', ['url' => route('admin.posts.index')])
+@endsection
+
 @section('content')
-    <h1>{{ __('New post') }}</h1>
+    <div class="page-header d-print-none">
+        <h1 class="page-title">{{ __('New post') }}</h1>
+    </div>
 
     <form method="POST" action="{{ route('admin.posts.store') }}">
         @csrf
-        @include('admin.posts._form', ['post' => null])
-        <button type="submit">{{ __('Save') }}</button>
-    </form>
 
-    <a href="{{ route('admin.posts.index') }}">{{ __('Back to overview') }}</a>
+        <div class="card">
+            <div class="card-body">
+                @include('admin.posts._form', ['post' => null])
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
+            </div>
+        </div>
+    </form>
 @endsection

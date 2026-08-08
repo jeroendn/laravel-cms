@@ -1,28 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
-    <hgroup>
-        <h1>{{ config('app.name') }}</h1>
-    </hgroup>
+    <div class="page-header d-print-none">
+        <h1 class="page-title">{{ __('Recent posts') }}</h1>
+    </div>
 
     @forelse ($posts as $post)
-        <article>
-            <header>
-                <hgroup>
-                    <h2><a href="{{ route('posts.show', $post) }}" class="contrast">{{ $post->title }}</a></h2>
-                    <p><small>{{ $post->published_at?->translatedFormat('j F Y') }}</small></p>
-                </hgroup>
-            </header>
-            <p>{{ $post->excerpt() }}</p>
-            <footer><a href="{{ route('posts.show', $post) }}">{{ __('Read more') }}</a></footer>
-        </article>
+        @include('partials.post-card', ['post' => $post])
     @empty
         <p>{{ __('The first blog posts will appear here soon.') }}</p>
     @endforelse
 
-    @include('partials.pagination', [
-        'paginator' => $posts,
-        'previousLabel' => __('Newer posts'),
-        'nextLabel' => __('Older posts'),
-    ])
+    @if ($posts->isNotEmpty())
+        <a href="{{ route('posts.index') }}">
+            {{ __('All posts') }}<i class="fa-solid fa-arrow-right ms-2" aria-hidden="true"></i>
+        </a>
+    @endif
 @endsection
