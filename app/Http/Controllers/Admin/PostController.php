@@ -29,7 +29,7 @@ class PostController extends Controller
     {
         Post::create([
             ...$request->safe(['title', 'slug', 'body']),
-            'published_at' => $request->boolean('published') ? now() : null,
+            'published_at' => $request->date('published_at'),
         ]);
 
         return redirect()
@@ -46,8 +46,7 @@ class PostController extends Controller
     {
         $post->update([
             ...$request->safe(['title', 'slug', 'body']),
-            // Keep the original publication date when the post stays published.
-            'published_at' => $request->boolean('published') ? $post->published_at ?? now() : null,
+            'published_at' => $request->date('published_at'),
         ]);
 
         return redirect()

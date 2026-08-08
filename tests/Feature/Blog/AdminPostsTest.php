@@ -71,12 +71,41 @@ class AdminPostsTest extends TestCase
             'title' => 'Instantly live',
             'slug' => '',
             'body' => '<p>Content</p>',
-            'published' => '1',
+            'published_at' => now()->format('Y-m-d'),
         ]);
 
         $post = Post::query()->firstOrFail();
 
         $this->assertTrue($post->isPublished());
+    }
+
+    public function testAdminCanScheduleAPost(): void
+    {
+        $this->actingAs($this->admin())->post(route('admin.posts.store'), [
+            'title' => 'Coming up',
+            'slug' => '',
+            'body' => '<p>Content</p>',
+            'published_at' => now()->addWeek()->format('Y-m-d'),
+        ]);
+
+        $post = Post::query()->firstOrFail();
+
+        $this->assertTrue($post->isScheduled());
+        $this->assertFalse($post->isPublished());
+    }
+
+    public function testStatusBadgesDistinguishPublishedScheduledAndDraft(): void
+    {
+        app()->setLocale('en');
+        Post::factory()->published()->create();
+        Post::factory()->create(['published_at' => now()->addWeek()]);
+        Post::factory()->create();
+
+        $response = $this->actingAs($this->admin())->get(route('admin.posts.index'));
+
+        $response->assertSeeInOrder(['bg-green-lt', 'Published']);
+        $response->assertSeeInOrder(['bg-yellow-lt', 'Scheduled']);
+        $response->assertSeeInOrder(['bg-secondary-lt', 'Draft']);
     }
 
     public function testTitleBodyAndUniqueSlugAreValidated(): void
@@ -94,7 +123,8 @@ class AdminPostsTest extends TestCase
 
     public function testAdminCanUpdateAPostKeepingThePublicationDate(): void
     {
-        $post = Post::factory()->published()->create();
+        // Day precision: the form's date field carries no time.
+        $post = Post::factory()->published()->create(['published_at' => now()->subDay()->startOfDay()]);
         $originallyPublishedAt = $post->published_at;
         $this->assertNotNull($originallyPublishedAt);
 
@@ -102,7 +132,7 @@ class AdminPostsTest extends TestCase
             'title' => 'New title',
             'slug' => $post->slug,
             'body' => '<p>New content</p>',
-            'published' => '1',
+            'published_at' => $originallyPublishedAt->format('Y-m-d'),
         ]);
 
         $response->assertRedirect(route('admin.posts.index'));
@@ -120,6 +150,7 @@ class AdminPostsTest extends TestCase
             'title' => $post->title,
             'slug' => $post->slug,
             'body' => $post->body,
+            'published_at' => '',
         ]);
 
         $this->assertNull($post->refresh()->published_at);

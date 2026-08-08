@@ -41,9 +41,15 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-check form-switch">
-        <input id="published" class="form-check-input" type="checkbox" name="published" value="1"
-               @checked(old('published', $post?->isPublished() ? '1' : ''))>
-        <span class="form-check-label">{{ __('Published') }}</span>
-    </label>
+    <label class="form-label" for="published_at">{{ __('Publication date') }}</label>
+    <input id="published_at" type="date" name="published_at"
+           value="{{ old('published_at', $post?->published_at?->format('Y-m-d')) }}"
+           class="form-control @error('published_at') is-invalid @enderror"
+           aria-describedby="published-at-help">
+    @error('published_at')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+    <small id="published-at-help" class="form-hint">
+        {{ __('Leave empty to save as a draft; a future date schedules the post.') }}
+    </small>
 </div>

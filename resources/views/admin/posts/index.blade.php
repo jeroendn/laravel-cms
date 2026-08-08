@@ -39,6 +39,8 @@
                                 <td>
                                     @if ($post->isPublished())
                                         <span class="badge bg-green-lt">{{ __('Published') }}</span>
+                                    @elseif ($post->isScheduled())
+                                        <span class="badge bg-yellow-lt">{{ __('Scheduled') }}</span>
                                     @else
                                         <span class="badge bg-secondary-lt">{{ __('Draft') }}</span>
                                     @endif

@@ -320,7 +320,7 @@ the front door**: it auto-detects context and forwards dev commands into
 - **Model `Post`**: `title`, `slug` (unique, public URL key), `body`
   (HTML from the editor), `published_at` (null = draft, future =
   scheduled). `Post::published()` is the public query; `isPublished()`
-  the per-model check.
+  and `isScheduled()` the per-model checks.
 - **Public**: `/` teases the `PostController::RECENT` newest published
   posts and links on to `/blog`, the full archive (newest first,
   `simplePaginate(10)`); `/blog/{slug}` shows one post. Drafts and
@@ -329,9 +329,12 @@ the front door**: it auto-detects context and forwards dev commands into
 - **Admin CRUD** at `/admin/posts` (auth middleware on the route group;
   every authenticated user is an admin). Create/edit share
   `admin/posts/_form.blade.php`. The slug is generated from the title
-  when left empty (`StorePostRequest::prepareForValidation`); a
-  "Published" switch maps to `published_at` (first publish date is kept
-  when re-saving a published post).
+  when left empty (`StorePostRequest::prepareForValidation`);
+  `published_at` is a date field, stored as midnight — day precision is
+  enough for this blog (decided 2026-08-08); empty = draft, future =
+  scheduled, and the field is prefilled on edit, so re-saving keeps the
+  original publish date. The overview shows the status as a badge:
+  green "Published", yellow "Scheduled", grey "Draft".
 - **Editor**: **Quill 2** (npm dependency, BSD-3). Deliberately NOT Trix:
   Trix 2.1.x never gets keyboard input into its document model (text shows
   in the DOM but nothing is saved) — reproduced with both its ESM and UMD

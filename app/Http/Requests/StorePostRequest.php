@@ -40,7 +40,7 @@ class StorePostRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:posts,slug'],
             'body' => ['required', 'string'],
-            'published' => ['nullable', 'boolean'],
+            'published_at' => ['nullable', 'date'],
         ];
     }
 }
