@@ -12,7 +12,7 @@
             --background-color: #f9fafb;
             --color: #1f2937;
             --muted-color: rgba(31, 41, 55, 0.75);
-            --primary: #066fd1;
+            --primary: #0f766e;
         }
 
         @media only screen and (prefers-color-scheme: dark) {
@@ -20,7 +20,7 @@
                 --background-color: #111827;
                 --color: #e5e7eb;
                 --muted-color: rgba(229, 231, 235, 0.75);
-                --primary: #066fd1;
+                --primary: #14b8a6;
             }
         }
 
