@@ -10,8 +10,6 @@
 
             {{-- body_html is sanitized by HTMLPurifier (see Post::bodyHtml). --}}
             {!! $post->body_html !!}
-
-            <p class="mt-4 mb-0"><a href="{{ route('home') }}">{{ __('Back to overview') }}</a></p>
         </div>
     </article>
 @endsection

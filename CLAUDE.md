@@ -10,7 +10,7 @@ This file is loaded automatically as context.
 > the README stays the short practical front door (stack, commands, setup).
 > Bump the "Last updated" date below on every change.
 >
-> Last updated: 2026-08-07
+> Last updated: 2026-08-08
 
 ---
 
@@ -164,6 +164,18 @@ the front door**: it auto-detects context and forwards dev commands into
   express — `position: fixed` + `inset` + a z-index above modals) and a
   warning badge next to the brand. Below `md` the badge **replaces** the
   site name; side by side they overflow a 375px viewport.
+- **Breadcrumbs**: `App\Support\Breadcrumbs::current()` maps the current
+  route name to a trail, which the layout renders through
+  `partials/breadcrumbs.blade.php` above every page. The home crumb is an
+  icon the partial always prepends, so the class only returns what follows
+  it. An empty trail (the `default` arm) renders nothing at all — the admin
+  create/edit forms stay in that group on purpose, they already carry a
+  "Back" link. New routes get a `match` arm; labels come from the bound
+  model where there is one (`posts.show`).
+- A post detail page is `🏠 / <title>`, without a "Posts" step in between:
+  the public list **is** the home page, so that crumb would link where the
+  house already points (decided 2026-08-08). Add it once the client's site
+  structure gives the blog its own index page.
 - Both hang off `@adminArea`, a `Blade::if()` registered in
   `AppServiceProvider` — not a controller variable, because the same layout
   also serves the auth views that laravel/ui's own controllers render. A

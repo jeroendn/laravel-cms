@@ -48,6 +48,7 @@ empty slug field is filled automatically from the title. Logged-in users
 switch between the public site and the admin area through the account
 menu on the right of the nav bar; the admin area has its own menu, a
 warning-coloured frame around the page and a badge next to the site name.
+Pages carry breadcrumbs, except the forms — those have a back link.
 
 Admin login lives at `/login` (registration is disabled; the public site
 shows no login link). The migrations bootstrap an admin account

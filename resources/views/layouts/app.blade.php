@@ -1,3 +1,4 @@
+@use('App\Support\Breadcrumbs')
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -63,6 +64,8 @@
         <div class="page-wrapper">
             <div class="page-body">
                 <div class="container-xl">
+                    @include('partials.breadcrumbs', ['breadcrumbs' => Breadcrumbs::current()])
+
                     @yield('content')
                 </div>
             </div>
