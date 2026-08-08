@@ -41,8 +41,9 @@ Caddyfile.
 
 ## Blog
 
-Published posts are listed on `/` and shown on `/blog/{slug}`; drafts
-stay hidden. After logging in, posts are managed at `/admin/posts`:
+`/` shows the five newest published posts and links on to `/blog`, the
+full archive; a single post lives at `/blog/{slug}`. Drafts stay hidden.
+After logging in, posts are managed at `/admin/posts`:
 create, edit, publish/unpublish and delete, with a WYSIWYG editor. An
 empty slug field is filled automatically from the title. Logged-in users
 switch between the public site and the admin area through the account

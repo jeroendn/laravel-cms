@@ -155,10 +155,10 @@ the front door**: it auto-detects context and forwards dev commands into
   `partials/nav-account.blade.php` (avatar dropdown: switch site ⇄ admin,
   logout) appended for authenticated users. That partial is **last in the
   list on purpose**: `ms-md-auto` right-aligns it once the row is
-  horizontal, and in the burger menu it lands at the bottom. The public menu
-  is **placeholder copy** (`Home` + three dropdowns with `href="#"`),
-  waiting on the client's real site structure; the admin menu is just
-  `Posts` for now.
+  horizontal, and in the burger menu it lands at the bottom. `Home` and
+  `Posts` are real links; the two remaining dropdowns are **placeholder
+  copy** with `href="#"`, waiting on the client's real site structure. The
+  admin menu is just `Posts` for now.
 - **Admin area is visually marked**: a fixed warning-coloured frame around
   the viewport (`.admin-frame`, the one thing Tabler utilities cannot
   express — `position: fixed` + `inset` + a z-index above modals) and a
@@ -169,13 +169,13 @@ the front door**: it auto-detects context and forwards dev commands into
   `partials/breadcrumbs.blade.php` above every page. The home crumb is an
   icon the partial always prepends, so the class only returns what follows
   it. An empty trail (the `default` arm) renders nothing at all — the admin
-  create/edit forms stay in that group on purpose, they already carry a
-  "Back" link. New routes get a `match` arm; labels come from the bound
-  model where there is one (`posts.show`).
-- A post detail page is `🏠 / <title>`, without a "Posts" step in between:
-  the public list **is** the home page, so that crumb would link where the
-  house already points (decided 2026-08-08). Add it once the client's site
-  structure gives the blog its own index page.
+  create/edit forms stay in that group on purpose: they fill the layout's
+  `@section('back')` instead, which sits in the same slot, so a page shows
+  either a trail or a back link and never both. New routes get a `match`
+  arm; labels come from the bound model where there is one (`posts.show`).
+  A post detail page is `🏠 / Posts / <title>` — the "Posts" step only
+  became meaningful once `/blog` existed; before that it would have pointed
+  at the same page as the house.
 - Both hang off `@adminArea`, a `Blade::if()` registered in
   `AppServiceProvider` — not a controller variable, because the same layout
   also serves the auth views that laravel/ui's own controllers render. A
@@ -232,8 +232,11 @@ the front door**: it auto-detects context and forwards dev commands into
   (HTML from the editor), `published_at` (null = draft, future =
   scheduled). `Post::published()` is the public query; `isPublished()`
   the per-model check.
-- **Public**: `/` lists published posts (newest first, `simplePaginate`),
-  `/blog/{slug}` shows one; drafts and scheduled posts 404 there.
+- **Public**: `/` teases the `PostController::RECENT` newest published
+  posts and links on to `/blog`, the full archive (newest first,
+  `simplePaginate(10)`); `/blog/{slug}` shows one post. Drafts and
+  scheduled posts appear in none of the three. Both lists render the same
+  `partials/post-card.blade.php`.
 - **Admin CRUD** at `/admin/posts` (auth middleware on the route group;
   every authenticated user is an admin). Create/edit share
   `admin/posts/_form.blade.php`. The slug is generated from the title
@@ -338,8 +341,11 @@ with a dummy `APP_KEY` since CI has no `.env`.
       feature tests.
 - [x] Maintenance page: branded, self-contained 503 prerendered by `./deploy`
       instead of the raw 500 visitors used to get (see §2).
-- [ ] Real menu structure: the header nav is placeholder copy with `#`
-      links until the client delivers the site structure (see §3).
+- [x] Navigation: separate public/admin menus, account dropdown, admin
+      frame and breadcrumbs (see §3), with feature tests.
+- [ ] Real menu structure: two of the header dropdowns are still
+      placeholder copy with `#` links until the client delivers the site
+      structure (see §3).
 - [ ] User management: an admin UI to create accounts / grant others
       access (for now this goes through tinker or a no-password row +
       password reset, see §5).

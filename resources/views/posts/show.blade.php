@@ -3,13 +3,23 @@
 @section('title', $post->title)
 
 @section('content')
-    <article class="card">
-        <div class="card-body">
-            <h1 class="card-title mb-1">{{ $post->title }}</h1>
-            <div class="text-secondary mb-4">{{ $post->published_at?->translatedFormat('j F Y') }}</div>
+    <article>
+        <div class="page-header">
+            <h1 class="page-title">{{ $post->title }}</h1>
+            @if ($post->published_at)
+                <div class="text-secondary">
+                    <time datetime="{{ $post->published_at->toIso8601String() }}">
+                        {{ $post->published_at->translatedFormat('j F Y') }}
+                    </time>
+                </div>
+            @endif
+        </div>
 
-            {{-- body_html is sanitized by HTMLPurifier (see Post::bodyHtml). --}}
-            {!! $post->body_html !!}
+        <div class="card">
+            <div class="card-body">
+                {{-- body_html is sanitized by HTMLPurifier (see Post::bodyHtml). --}}
+                {!! $post->body_html !!}
+            </div>
         </div>
     </article>
 @endsection

@@ -135,6 +135,17 @@ class AdminPostsTest extends TestCase
         $this->assertDatabaseMissing('posts', ['id' => $post->id]);
     }
 
+    public function testOnlyPublishedPostsGetALinkToTheirPublicPage(): void
+    {
+        $published = Post::factory()->published()->create();
+        $draft = Post::factory()->create();
+
+        $response = $this->actingAs($this->admin())->get(route('admin.posts.index'));
+
+        $response->assertSee(route('posts.show', $published));
+        $response->assertDontSee(route('posts.show', $draft));
+    }
+
     private function admin(): User
     {
         return User::factory()->create();

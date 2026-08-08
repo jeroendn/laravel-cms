@@ -1,8 +1,10 @@
 @extends('layouts.app')
 
+@section('title', __('Posts'))
+
 @section('content')
     <div class="page-header d-print-none">
-        <h1 class="page-title">{{ __('Recent posts') }}</h1>
+        <h1 class="page-title">{{ __('Posts') }}</h1>
     </div>
 
     @forelse ($posts as $post)
@@ -11,9 +13,9 @@
         <p>{{ __('The first blog posts will appear here soon.') }}</p>
     @endforelse
 
-    @if ($posts->isNotEmpty())
-        <a href="{{ route('posts.index') }}">
-            {{ __('All posts') }}<i class="fa-solid fa-arrow-right ms-2" aria-hidden="true"></i>
-        </a>
-    @endif
+    @include('partials.pagination', [
+        'paginator' => $posts,
+        'previousLabel' => __('Newer posts'),
+        'nextLabel' => __('Older posts'),
+    ])
 @endsection

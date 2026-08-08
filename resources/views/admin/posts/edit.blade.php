@@ -2,12 +2,12 @@
 
 @section('title', __('Edit post'))
 
+@section('back')
+    @include('partials.back-link', ['url' => route('admin.posts.index')])
+@endsection
+
 @section('content')
     <div class="page-header d-print-none">
-        <a href="{{ route('admin.posts.index') }}"
-           class="text-secondary d-inline-flex align-items-center mb-2">
-            <i class="fa-solid fa-arrow-left me-2" aria-hidden="true"></i>{{ __('Back') }}
-        </a>
         <h1 class="page-title">{{ __('Edit post') }}</h1>
     </div>
 

@@ -39,6 +39,49 @@ class PublicBlogTest extends TestCase
         $response->assertSeeInOrder(['Newest post', 'Oldest post']);
     }
 
+    public function testHomePageTeasesOnlyTheMostRecentPostsAndLinksToTheArchive(): void
+    {
+        Post::factory()->published()->count(6)->create();
+
+        $response = $this->get(route('home'));
+
+        $response->assertOk();
+        $this->assertSame(5, substr_count((string) $response->getContent(), 'class="card mb-3"'));
+        $response->assertSee(route('posts.index'));
+    }
+
+    public function testTheArchiveListsEveryPublishedPostNewestFirst(): void
+    {
+        Post::factory()->published()->create([
+            'title' => 'Oldest post',
+            'published_at' => now()->subDays(2),
+        ]);
+        Post::factory()->published()->create([
+            'title' => 'Newest post',
+            'published_at' => now()->subDay(),
+        ]);
+        Post::factory()->create(['title' => 'Unfinished draft']);
+        Post::factory()->create(['title' => 'Scheduled post', 'published_at' => now()->addDay()]);
+
+        $response = $this->get(route('posts.index'));
+
+        $response->assertOk();
+        $response->assertViewIs('posts.index');
+        $response->assertSeeInOrder(['Newest post', 'Oldest post']);
+        $response->assertDontSee('Unfinished draft');
+        $response->assertDontSee('Scheduled post');
+    }
+
+    public function testTheArchiveIsPaginated(): void
+    {
+        Post::factory()->published()->count(11)->create();
+
+        $response = $this->get(route('posts.index'));
+
+        $this->assertSame(10, substr_count((string) $response->getContent(), 'class="card mb-3"'));
+        $response->assertSee(__('Older posts'));
+    }
+
     public function testPublishedPostIsShownWithRenderedHtml(): void
     {
         $post = Post::factory()->published()->create([

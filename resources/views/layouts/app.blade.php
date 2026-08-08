@@ -65,6 +65,7 @@
             <div class="page-body">
                 <div class="container-xl">
                     @include('partials.breadcrumbs', ['breadcrumbs' => Breadcrumbs::current()])
+                    @yield('back')
 
                     @yield('content')
                 </div>

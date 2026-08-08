@@ -23,6 +23,7 @@ class Breadcrumbs
         }
 
         return match ($route->getName()) {
+            'posts.index' => [self::crumb(__('Posts'))],
             'posts.show' => self::post($route),
             'admin.posts.index' => [self::crumb(__('Posts'))],
             default => [],
@@ -36,7 +37,14 @@ class Breadcrumbs
     {
         $post = $route->parameter('post');
 
-        return $post instanceof Post ? [self::crumb($post->title)] : [];
+        if (!$post instanceof Post) {
+            return [];
+        }
+
+        return [
+            self::crumb(__('Posts'), route('posts.index')),
+            self::crumb($post->title),
+        ];
     }
 
     /**

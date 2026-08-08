@@ -13,7 +13,8 @@ Auth::routes([
     'confirm' => false,
 ]);
 
-Route::get('/', [PostController::class, 'index'])->name('home');
+Route::get('/', [PostController::class, 'home'])->name('home');
+Route::get('/blog', [PostController::class, 'index'])->name('posts.index');
 Route::get('/blog/{post:slug}', [PostController::class, 'show'])->name('posts.show');
 
 // Admin area: every authenticated user is an admin (registration is
