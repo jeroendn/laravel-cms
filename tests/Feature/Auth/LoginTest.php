@@ -27,8 +27,22 @@ class LoginTest extends TestCase
             'password' => 'password', // UserFactory default
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function testLoginReturnsToTheIntendedPage(): void
+    {
+        $user = User::factory()->create();
+
+        $this->get(route('admin.posts.index'))->assertRedirect(route('login'));
+
+        $response = $this->post(route('login'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('admin.posts.index'));
     }
 
     public function testUserCannotLoginWithWrongPassword(): void
@@ -51,7 +65,7 @@ class LoginTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('login'));
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('admin.dashboard'));
     }
 
     public function testUserCanLogout(): void

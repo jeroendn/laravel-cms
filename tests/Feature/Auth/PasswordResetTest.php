@@ -60,7 +60,7 @@ class PasswordResetTest extends TestCase
             'password_confirmation' => 'new-secret-password',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('admin.dashboard'));
         $this->assertTrue(Hash::check('new-secret-password', $user->refresh()->password));
     }
 }

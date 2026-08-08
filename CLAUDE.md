@@ -6,7 +6,7 @@ This file is loaded automatically as context.
 > ## ⚠️ Maintenance rule (hard, always applies)
 >
 > Keep this file **and** `README.md` up to date as part of the same change —
-> never afterwards. CLAUDE.md carries decisions, conventions and status;
+> never afterwards. CLAUDE.md carries decisions, conventions and open work;
 > the README stays the short practical front door (stack, commands, setup).
 > Bump the "Last updated" date below on every change.
 >
@@ -24,8 +24,10 @@ This file is loaded automatically as context.
 ## 1. What this is
 
 A **blog website** for a client, built with Laravel and styled with
-**Tabler** (Bootstrap 5). Currently a freshly scaffolded base: the blog
-functionality (posts, admin) is still to be built.
+**Tabler** (Bootstrap 5). The blog itself (public archive + admin CRUD),
+authentication, user management and the Dutch localization are in place;
+§9 lists what is not. Until the client goes live the public side is hidden
+behind a placeholder — see §2.
 
 ## 2. Architecture & environment
 
@@ -105,6 +107,49 @@ visitors get a raw **500** for the whole deploy (measured 2026-08-06):
   `handle_errors` block in `docker/caddy/Caddyfile` (Caddy mounts the repo at
   `/apps/magnesium:ro`) — not done, same trade-off as jeroendn-website.
 
+### Under construction (temporary)
+
+While the site is being built, `App\Http\Middleware\UnderConstruction`
+answers guests on the three public routes with
+`resources/views/under-construction.blade.php`. It keys off `APP_ENV`
+(`App::isProduction()`) — no separate flag, decided 2026-08-08 — so dev
+and the tests (`APP_ENV=testing`) always show the real pages.
+
+- **503, not 200**, so the placeholder never gets indexed as the site's
+  content; the view carries `robots: noindex` on top of that.
+- The middleware sits on the public route group only: `/login` and the
+  password reset stay reachable, and any authenticated user sees the whole
+  site again, admin area included. That is the only way in — the public
+  site still shows no login link, an admin types `/login` himself.
+- Route middleware runs *after* the web group's `SubstituteBindings`, so an
+  unknown `/blog/{slug}` keeps 404-ing instead of showing the placeholder.
+- Prod caches its config (`artisan optimize` in `./deploy`), so `APP_ENV`
+  changes only land with a redeploy.
+- **This has to be removed at launch** — prod stays `APP_ENV=production`
+  forever, so the placeholder does not lift by itself. Delete the
+  middleware + its route group wrapper, the view,
+  `UnderConstructionTest` and the two `lang/nl.json` keys.
+
+### Search indexing
+
+`public/robots.txt` **disallows nothing on purpose**: a disallowed URL can
+still be listed in the results, and a crawler that never fetches a page never
+reads its `noindex` either. What keeps the non-public pages out is
+`App\Http\Middleware\NoIndex`, which sets `X-Robots-Tag: noindex` on the
+`Auth::routes()` group and the admin group.
+
+- The guard is the route group, not the template: anything added to `/admin`
+  or to the auth routes is covered without touching a view.
+- What this really closes is `/login` and the password reset pages — those
+  answer 200 to anyone. Admin *content* was already unreachable for a
+  crawler, since it sits behind `auth`.
+- The redirect a guest gets from `/admin/*` carries **no** header: `auth`
+  throws before the middleware sees a response. Harmless — a 302 is not
+  indexed and `/login` says `noindex` itself. `SearchIndexingTest` pins that
+  whole journey, including that the public pages keep *no* header at all.
+- Not covered: `/up`, the health route from `bootstrap/app.php`, which sits
+  in neither group.
+
 ### ⚠️ Tooling rule (hard)
 
 `php`, `composer`, `artisan`, `npm`, `phpunit` and migrations **ALWAYS
@@ -123,8 +168,10 @@ the front door**: it auto-detects context and forwards dev commands into
 ## 3. Frontend
 
 - **Tabler** (`@tabler/core`, MIT), imported in `resources/css/app.css`,
-  bundled by Vite (`npm run build` — there is no Vite dev-server setup;
-  rebuild after asset changes). Replaced Pico CSS on 2026-08-07: Pico is
+  bundled by Vite (`npm run build` — rebuild after asset changes; the
+  Laravel default dev-server scripts in `package.json`/`vite.config.js`
+  are still there but unreachable, since the container publishes no
+  ports). Replaced Pico CSS on 2026-08-07: Pico is
   classless and deliberately minimal, and every layout wish (branded
   header, dropdown menu, burger menu) turned into hand-written CSS that
   fought the framework. Tabler ships all of that as components. The price
@@ -167,7 +214,10 @@ the front door**: it auto-detects context and forwards dev commands into
   an inline `<head>` script, before the stylesheet loads, so the behaviour is
   unchanged and there is no flash of the wrong theme.
 - Blade: `resources/views/layouts/app.blade.php` is the base layout; pages
-  extend it (`resources/views/home.blade.php`).
+  extend it (`resources/views/home.blade.php`). Its `<head>` contents live
+  in `partials/head.blade.php`, shared with the standalone
+  `under-construction.blade.php` — the theme script must not drift between
+  the two. The 503 page is *not* in on this: it stays self-contained.
 - **Header**: Tabler's horizontal layout — a first `navbar` holding the
   brand and a second one holding the menu row underneath it. The
   `navbar-toggler` collapses the menu row into a burger menu below `md` for
@@ -215,9 +265,11 @@ the front door**: it auto-detects context and forwards dev commands into
   same as jeroendn-website). `APP_LOCALE=nl` renders Dutch,
   `APP_FALLBACK_LOCALE=en` makes English work automatically.
 - App-specific strings live in `lang/nl.json` (kept alphabetically
-  sorted); framework strings (validation, auth, passwords, pagination)
-  in `lang/nl/*.php` + the bulk of `lang/nl.json`, generated by
-  **laravel-lang**.
+  sorted); framework strings in the six `lang/nl/*.php` files (`actions`,
+  `auth`, `http-statuses`, `pagination`, `passwords`, `validation`) plus
+  the bulk of `lang/nl.json`, all generated by **laravel-lang**. It also
+  writes `lang/en/*.php`, committed like the rest even though the keys
+  are already English.
 - **Reuse laravel-lang's `:name` templates instead of writing one string
   per entity.** `__('Edit :name', ['name' => __('post')])` renders
   "Artikel bewerken" — `:Name` ucfirst's the replacement, so the noun goes
@@ -251,8 +303,22 @@ the front door**: it auto-detects context and forwards dev commands into
   admins navigate to `/login` directly; only the logout button is shown
   to authenticated users.
 - The laravel/ui stubs' `$this->middleware()` constructor calls don't
-  exist in modern Laravel — controllers implement `HasMiddleware` with a
-  static `middleware()` method instead (see `LoginController`).
+  exist in modern Laravel. `LoginController` is the only one that needs
+  middleware and declares it through `HasMiddleware` + a static
+  `middleware()` method; the forgot/reset controllers carry none at all,
+  so an already authenticated visitor is not bounced off those pages.
+- **Authenticating lands you on the admin dashboard**, not on `/`: the
+  only reason to log in here is the admin area. That is three places, all
+  pointing at `admin.dashboard` — `LoginController` and
+  `ResetPasswordController` (a completed reset logs you in too, and it is
+  how a new admin first gets in) override laravel/ui's `$redirectTo`
+  *property* with a `redirectTo()` **method**, because a route name only
+  resolves at runtime; and `redirectUsersTo()` in `bootstrap/app.php`
+  covers the `guest` middleware, which would otherwise send an already
+  authenticated visitor of `/login` to the `home` route. Logging out still
+  ends on the public home — you are a guest by then. Laravel's
+  `redirect()->intended()` keeps priority throughout, so being bounced off
+  an admin page still returns you to that page.
 - The first admin (`info@jeroendn.nl`) is bootstrapped by a **data
   migration** (`2026_08_06_084152_create_admin_user`) without a usable
   password (random hash — the column is not nullable); the admin gains
@@ -356,16 +422,18 @@ the front door**: it auto-detects context and forwards dev commands into
   project. The snow toolbar is icon-only, so there is no JS-side copy to
   translate. `app.js` seeds Quill from the hidden `body` input and syncs
   back on change/submit via `getSemanticHTML()` (with an `&nbsp;`
-  workaround for quill#4509). Quill ships its own complete styling; the four
+  workaround for quill#4509). Quill ships its own complete styling; the five
   rules in `app.css` are all that is left (measured 2026-08-07 by deleting
-  each one in the browser — a fifth, `color: inherit` on the editor's block
+  each one in the browser — one more, `color: inherit` on the editor's block
   elements, was a Pico artefact and had no effect under Tabler):
   a `min-height` (without it the editor collapses to 42px, since Quill sets
-  `height: 100%` on an auto-height parent), a white surface, Tabler's border
-  radius, and the `is-invalid` border. **The surface must stay light** — not
-  because the text would be unreadable (Tabler's light body color on the dark
-  card is fine) but because Quill hard-codes its toolbar icons to `#444`
-  stroke/fill, which vanish on a dark background.
+  `height: 100%` on an auto-height parent), a light surface (`#fff` plus
+  Quill's own `#444` text), Tabler's border radius (two rules — the toolbar
+  rounds at the top, the container at the bottom), and the `is-invalid`
+  border. **The surface must stay light** — not because the text would be
+  unreadable (Tabler's light body color on the dark card is fine) but
+  because Quill hard-codes its toolbar icons to `#444` stroke/fill, which
+  vanish on a dark background.
   Quill turns `#body-editor` into `.ql-container` and inserts `.ql-toolbar`
   as a **sibling**, so `_form.blade.php` puts the `is-invalid` class on a
   wrapper around it — on the editor itself only half of it would get the
@@ -396,9 +464,11 @@ Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
 `Auth/PasswordResetTest`, `Blog/PublicBlogTest`, `Blog/AdminPostsTest`,
 `Admin/DashboardTest`, `Admin/UsersTest`, `ActivityTrackingTest`,
 `NavigationTest`, `BreadcrumbsTest`, `LocalizationTest`,
-`AdminUserMigrationTest`, `MaintenancePageTest`)
-and use `RefreshDatabase` on sqlite `:memory:`. They are the default level
-here — almost everything is framework-coupled and best tested over HTTP.
+`AdminUserMigrationTest`, `MaintenancePageTest`, `UnderConstructionTest`,
+`SearchIndexingTest`) and use `RefreshDatabase` on sqlite `:memory:` — except
+`MaintenancePageTest`, which only renders a view and never touches a
+database. They are the default level here — almost everything is
+framework-coupled and best tested over HTTP.
 `tests/Unit/` is only for pure model logic (`PostTest`: `Post::excerpt()`
 and the `isPublished()` boundaries); it still extends `Tests\TestCase`
 (the container is needed for the Purify facade) but skips
@@ -431,34 +501,34 @@ npm build. **Every tracked .php file is covered** by rector/cs-fixer/phpstan
 three config's path lists in sync when adding root-level PHP files.
 Tool caches live in `tmp/`.
 Tests run against sqlite `:memory:` (see `phpunit.xml`), so they never
-touch MariaDB. CI (`.github/workflows/ci.yml`) runs the check variants
-(`rector-check`, `cs-check`, `phpstan`, `phpunit`) on every PR to master,
-with a dummy `APP_KEY` since CI has no `.env`.
+touch MariaDB. CI (`.github/workflows/ci.yml`) runs three jobs on every PR
+to master: `setup` (install + `composer validate --strict` +
+`composer normalize --dry-run`), a `check` matrix over the check variants
+(`rector-check`, `cs-check`, `phpstan`, `phpunit`) with a dummy `APP_KEY`
+since CI has no `.env`, and `assets` (`npm ci` + `npm run build`).
 
-## 9. Status / outstanding
+A **cold phpstan cache** fails the gate in a way that looks like a code error
+but is not (hit 2026-08-08): the parallel workers all build the same Nette
+container at once and race on the rename, so `cqa` aborts with `Unable to
+create file … tmp/phpstan/cache/nette.configurator/Container_….php` and
+"Result is incomplete because of severe errors". Warm it once single-process
+with `./develop composer phpstan -- --debug`; every parallel run after that
+is green.
 
-- [x] Base setup: Laravel 13 + Tabler, Docker/develop/deploy scripts,
-      quality gate green, migrations run against the shared MariaDB
-      (committed).
-- [x] Authentication: login/logout + password reset (laravel/ui,
-      registration disabled), with feature tests.
-- [x] Localization: NL via `__()` + `lang/` (English keys, laravel-lang
-      framework translations).
-- [x] Blog functionality: public list/detail + admin CRUD with Quill
-      WYSIWYG and HTMLPurifier output sanitization (see §6), with
-      feature tests.
-- [x] Maintenance page: branded, self-contained 503 prerendered by `./deploy`
-      instead of the raw 500 visitors used to get (see §2).
-- [x] Navigation: separate public/admin menus, account dropdown, admin
-      frame and breadcrumbs (see §3), with feature tests.
-- [x] User management: `/admin/users` CRUD with hand-over password reset
-      links instead of mail (see §5), with feature tests.
-- [ ] Real menu structure: two of the header dropdowns are still
+## 9. Outstanding
+
+Only open work lives here. **Finished items are deleted from this list, not
+ticked off** — what exists is described in the sections above.
+
+- Remove the under-construction placeholder when the site goes live:
+      it is tied to `APP_ENV=production` and will not lift by itself
+      (see §2).
+- Real menu structure: two of the header dropdowns are still
       placeholder copy with `#` links until the client delivers the site
       structure (see §3).
-- [ ] Admin dashboard content: `/admin` exists as the landing page of the
+- Admin dashboard content: `/admin` exists as the landing page of the
       admin area (and the target of its breadcrumb house) but is
       deliberately empty — no widgets decided on yet.
-- [ ] Post authorship: `posts` has no `user_id` yet. Users are soft-deleted
+- Post authorship: `posts` has no `user_id` yet. Users are soft-deleted
       (see §5), so that column can be added later without the delete button
       ever orphaning a post.

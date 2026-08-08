@@ -92,7 +92,7 @@ class UsersTest extends TestCase
             'password_confirmation' => 'a-brand-new-password',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('admin.dashboard'));
         $user = User::query()->where('email', 'new@example.test')->firstOrFail();
         $this->assertTrue(Hash::check('a-brand-new-password', $user->password));
     }

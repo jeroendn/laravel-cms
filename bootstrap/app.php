@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Last in the group: the session is started by then, so the user
         // resolves on every page, public site included.
         $middleware->appendToGroup('web', TrackActivity::class);
+
+        $middleware->redirectUsersTo(fn(): string => route('admin.dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
