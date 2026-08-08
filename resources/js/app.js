@@ -2,7 +2,13 @@
 // data-attribute handlers; Tabler's own bundle only adds widgets we don't use.
 import 'bootstrap/js/dist/collapse';
 import 'bootstrap/js/dist/dropdown';
+import Toast from 'bootstrap/js/dist/toast';
 import Quill from 'quill';
+
+document.querySelectorAll('.toast').forEach((el) => Toast.getOrCreateInstance(el).show());
+document.querySelectorAll('.toast-progress').forEach((bar) => {
+    bar.addEventListener('animationend', () => Toast.getOrCreateInstance(bar.closest('.toast')).hide());
+});
 
 const resetLink = document.getElementById('reset-link');
 const resetLinkCopy = document.getElementById('reset-link-copy');

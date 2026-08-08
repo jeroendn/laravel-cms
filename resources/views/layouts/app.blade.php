@@ -82,6 +82,20 @@
         </div>
     </div>
 
+    @if (session('status'))
+        <div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3 d-print-none">
+            <div class="toast text-bg-success border-0 overflow-hidden" role="status" aria-atomic="true"
+                 data-bs-autohide="false">
+                <div class="d-flex">
+                    <div class="toast-body">{{ session('status') }}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast" aria-label="{{ __('Close') }}"></button>
+                </div>
+                <div class="toast-progress"></div>
+            </div>
+        </div>
+    @endif
+
     @adminArea
         <div class="admin-frame border border-3 border-warning pe-none d-print-none"></div>
     @endadminArea

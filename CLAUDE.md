@@ -131,13 +131,27 @@ the front door**: it auto-detects context and forwards dev commands into
   is bundle size — 70 kB gzipped CSS + 74 kB JS against Pico's 15 + 59.
 - Tabler is a **Bootstrap 5 theme**, so it is utility-class driven: styling
   goes through Bootstrap/Tabler classes in the Blade templates, and only
-  what those cannot express belongs in `app.css` (currently just the Quill
-  overrides). Customization happens through the `--tblr-*` custom properties.
+  what those cannot express belongs in `app.css` (the Quill overrides, the
+  admin frame and the toast countdown bar). Customization happens through the `--tblr-*` custom properties.
 - **Tabler's own JS bundle is not used** — it only carries widgets we do not
-  have (autosize, theme switcher). `app.js` imports `bootstrap/js/dist/collapse`
-  and `.../dropdown` instead; importing them registers their data-attribute
-  handlers, so the navbar needs no glue code. `bootstrap` is therefore a
-  direct dependency in `package.json`, not a transitive one.
+  have (autosize, theme switcher). `app.js` imports `bootstrap/js/dist/collapse`,
+  `.../dropdown` and `.../toast` instead; importing them registers their
+  data-attribute handlers, so the navbar needs no glue code. `bootstrap` is
+  therefore a direct dependency in `package.json`, not a transitive one.
+- **Flash messages are toasts**: the layout renders `session('status')` as a
+  single toast (bottom center, dismissable) — views never render their own
+  status alert. Bootstrap does not auto-show toasts, so `app.js` calls
+  `.show()` on every `.toast`. Auto-hide (15 s) is NOT Bootstrap's
+  (`data-bs-autohide="false"`): a `.toast-progress` countdown bar shrinks via
+  a CSS animation and `app.js` hides the toast on `animationend`, so the bar
+  and the hide moment cannot drift apart — the 15 s lives in `app.css`, and
+  hover/`:focus-within` pauses the countdown (Bootstrap's paused timer would
+  restart in full, a CSS animation resumes where it left off).
+  Because it lives in the layout, *any* flashed status shows up, also on
+  pages that never rendered one before (e.g. after a completed password
+  reset). The reset-link panel on `/admin/users` deliberately stays an
+  inline alert: it holds a link the admin must copy, so it must not
+  disappear on its own.
 - **Icons**: **Font Awesome Free 7** (`@fortawesome/fontawesome-free`,
   CC-BY-4.0 + OFL-1.1 + MIT — fine for this proprietary project, unlike the
   GPL editors in §6). `app.css` imports only `fontawesome.css` + `solid.css`:

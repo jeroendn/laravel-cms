@@ -65,6 +65,19 @@ class AdminPostsTest extends TestCase
         ]);
     }
 
+    public function testFlashStatusRendersAsAnAutoHidingToast(): void
+    {
+        $response = $this->actingAs($this->admin())->followingRedirects()->post(route('admin.posts.store'), [
+            'title' => 'Toasted',
+            'slug' => '',
+            'body' => '<p>Content</p>',
+        ]);
+
+        $response->assertSee(__(':Name created.', ['name' => __('post')]));
+        $response->assertSee('toast-progress', false);
+        $response->assertSee('data-bs-autohide="false"', false);
+    }
+
     public function testAdminCanCreatePublishedPost(): void
     {
         $this->actingAs($this->admin())->post(route('admin.posts.store'), [

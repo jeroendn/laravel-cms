@@ -14,10 +14,6 @@
         </div>
     </div>
 
-    @if (session('status'))
-        <div class="alert alert-success">{{ session('status') }}</div>
-    @endif
-
     @if (session('resetLink'))
         <div class="alert alert-info">
             <h2 class="alert-title">{{ __('Password reset link') }}</h2>

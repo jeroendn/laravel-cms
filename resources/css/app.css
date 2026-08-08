@@ -53,6 +53,27 @@
     border-color: var(--tblr-danger);
 }
 
+/* The flash toast's countdown bar. app.js hides the toast when this animation
+   ends (Bootstrap's own autohide timer is off), so the bar and the hide moment
+   cannot drift apart — also not while hovering/focusing pauses the countdown. */
+.toast-progress {
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.5);
+    transform-origin: left;
+    animation: toast-progress 15s linear forwards;
+}
+
+.toast:hover .toast-progress,
+.toast:focus-within .toast-progress {
+    animation-play-state: paused;
+}
+
+@keyframes toast-progress {
+    to {
+        transform: scaleX(0);
+    }
+}
+
 .admin-frame {
     position: fixed;
     inset: 0;

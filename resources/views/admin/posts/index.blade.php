@@ -14,10 +14,6 @@
         </div>
     </div>
 
-    @if (session('status'))
-        <div class="alert alert-success">{{ session('status') }}</div>
-    @endif
-
     @if ($posts->isEmpty())
         <p>{{ __('No posts yet.') }}</p>
     @else

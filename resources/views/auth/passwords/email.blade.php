@@ -10,10 +10,6 @@
                 {{ __('Enter your e-mail address and you will receive a link to set a new password.') }}
             </p>
 
-            @if (session('status'))
-                <div class="alert alert-success">{{ session('status') }}</div>
-            @endif
-
             <form method="POST" action="{{ route('password.email') }}">
                 @csrf
 
