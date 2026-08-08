@@ -24,22 +24,39 @@ class BreadcrumbsTest extends TestCase
         $this->assertStringContainsString('A published post', $trail);
     }
 
-    public function testTheArchiveAndTheAdminOverviewHaveBreadcrumbs(): void
+    public function testTheArchiveAndTheAdminOverviewsHaveBreadcrumbs(): void
     {
         $this->assertStringContainsString('fa-house', $this->trail($this->get(route('posts.index'))));
 
-        $admin = $this->actingAs(User::factory()->create())->get(route('admin.posts.index'));
-        $this->assertStringContainsString('fa-house', $this->trail($admin));
+        $admin = User::factory()->create();
+        $this->assertStringContainsString(
+            'fa-house',
+            $this->trail($this->actingAs($admin)->get(route('admin.posts.index'))),
+        );
+        $this->assertStringContainsString(
+            'fa-house',
+            $this->trail($this->actingAs($admin)->get(route('admin.users.index'))),
+        );
     }
 
-    public function testTheHomePageAndTheAdminFormsHaveNone(): void
+    public function testInTheAdminAreaTheHouseLeadsToTheDashboard(): void
+    {
+        $trail = $this->trail($this->actingAs(User::factory()->create())->get(route('admin.posts.index')));
+
+        $this->assertStringContainsString('href="' . route('admin.dashboard') . '"', $trail);
+    }
+
+    public function testTheHomePagesAndTheAdminFormsHaveNone(): void
     {
         $post = Post::factory()->create();
         $admin = User::factory()->create();
 
         $this->assertSame('', $this->trail($this->get(route('home'))));
+        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.dashboard'))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.posts.create'))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.posts.edit', $post))));
+        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.users.create'))));
+        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.users.edit', $admin))));
     }
 
     /**

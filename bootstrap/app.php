@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\TrackActivity;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // proxies is safe here: the container is only reachable through the
         // internal Docker network.
         $middleware->trustProxies(at: '*');
+
+        // Last in the group: the session is started by then, so the user
+        // resolves on every page, public site included.
+        $middleware->appendToGroup('web', TrackActivity::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

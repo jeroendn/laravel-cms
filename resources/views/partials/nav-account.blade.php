@@ -12,7 +12,7 @@
                 <i class="fa-solid fa-globe fa-fw me-2" aria-hidden="true"></i>{{ __('View site') }}
             </a>
         @else
-            <a class="dropdown-item" href="{{ route('admin.posts.index') }}">
+            <a class="dropdown-item" href="{{ route('admin.dashboard') }}">
                 <i class="fa-solid fa-gear fa-fw me-2" aria-hidden="true"></i>{{ __('Administration') }}
             </a>
         @endadminArea

@@ -1,11 +1,12 @@
 @php
     /** @var list<array{label: string, url: string|null}> $breadcrumbs */
+    /** @var string $homeUrl */
 @endphp
 
 @if ($breadcrumbs !== [])
     <ol class="breadcrumb d-print-none" aria-label="{{ __('Breadcrumbs') }}">
         <li class="breadcrumb-item">
-            <a href="{{ route('home') }}" aria-label="{{ __('Home') }}">
+            <a href="{{ $homeUrl }}" aria-label="{{ __('Home') }}">
                 <i class="fa-solid fa-house" aria-hidden="true"></i>
             </a>
         </li>

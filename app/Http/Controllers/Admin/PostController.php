@@ -34,7 +34,7 @@ class PostController extends Controller
 
         return redirect()
             ->route('admin.posts.index')
-            ->with('status', __('Post created.'));
+            ->with('status', __(':Name created.', ['name' => __('post')]));
     }
 
     public function edit(Post $post): View
@@ -52,7 +52,7 @@ class PostController extends Controller
 
         return redirect()
             ->route('admin.posts.index')
-            ->with('status', __('Post updated.'));
+            ->with('status', __(':Name updated.', ['name' => __('post')]));
     }
 
     public function destroy(Post $post): RedirectResponse
@@ -61,6 +61,6 @@ class PostController extends Controller
 
         return redirect()
             ->route('admin.posts.index')
-            ->with('status', __('Post deleted.'));
+            ->with('status', __(':Name deleted.', ['name' => __('post')]));
     }
 }

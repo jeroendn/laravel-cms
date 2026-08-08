@@ -4,6 +4,20 @@ import 'bootstrap/js/dist/collapse';
 import 'bootstrap/js/dist/dropdown';
 import Quill from 'quill';
 
+const resetLink = document.getElementById('reset-link');
+const resetLinkCopy = document.getElementById('reset-link-copy');
+
+if (resetLink && resetLinkCopy) {
+    const icon = resetLinkCopy.querySelector('i');
+
+    resetLinkCopy.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(resetLink.value);
+
+        icon.className = 'fa-solid fa-check';
+        setTimeout(() => icon.className = 'fa-solid fa-copy', 2000);
+    });
+}
+
 // WYSIWYG editor for the admin post form. The toolbar is icon-only, so it
 // involves no translatable copy.
 const editorElement = document.getElementById('body-editor');

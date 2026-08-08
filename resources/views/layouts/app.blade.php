@@ -29,7 +29,7 @@
                 </button>
 
                 @adminArea
-                    <a href="{{ route('admin.posts.index') }}" class="navbar-brand me-auto">
+                    <a href="{{ route('admin.dashboard') }}" class="navbar-brand me-auto">
                         <span class="d-none d-md-inline">{{ config('app.name') }}</span>
                         <span class="badge bg-warning text-dark ms-md-2">{{ __('Admin area') }}</span>
                     </a>
@@ -64,7 +64,10 @@
         <div class="page-wrapper">
             <div class="page-body">
                 <div class="container-xl">
-                    @include('partials.breadcrumbs', ['breadcrumbs' => Breadcrumbs::current()])
+                    @include('partials.breadcrumbs', [
+                        'breadcrumbs' => Breadcrumbs::current(),
+                        'homeUrl' => Breadcrumbs::homeUrl(),
+                    ])
                     @yield('back')
 
                     @yield('content')

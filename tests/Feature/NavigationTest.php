@@ -15,7 +15,7 @@ class NavigationTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertDontSee(route('logout'));
-        $response->assertDontSee(route('admin.posts.index'));
+        $response->assertDontSee(route('admin.dashboard'));
         $response->assertDontSee('admin-frame');
     }
 
@@ -23,7 +23,7 @@ class NavigationTest extends TestCase
     {
         $response = $this->actingAs(User::factory()->create())->get(route('home'));
 
-        $response->assertSee(route('admin.posts.index'));
+        $response->assertSee('href="' . route('admin.dashboard') . '"', false);
         $response->assertSee(route('logout'));
         $response->assertDontSee('admin-frame');
         $response->assertDontSee(__('Admin area'));
@@ -31,11 +31,19 @@ class NavigationTest extends TestCase
 
     public function testTheAdminAreaIsMarkedAndOffersAWayBackToThePublicSite(): void
     {
-        $response = $this->actingAs(User::factory()->create())->get(route('admin.posts.index'));
+        $response = $this->actingAs(User::factory()->create())->get(route('admin.dashboard'));
 
         $response->assertSee('admin-frame');
         $response->assertSee(__('Admin area'));
         $response->assertSee(__('View site'));
         $response->assertSee(route('logout'));
+    }
+
+    public function testTheAdminMenuLinksToEveryAdminSection(): void
+    {
+        $response = $this->actingAs(User::factory()->create())->get(route('admin.dashboard'));
+
+        $response->assertSee('href="' . route('admin.posts.index') . '"', false);
+        $response->assertSee('href="' . route('admin.users.index') . '"', false);
     }
 }

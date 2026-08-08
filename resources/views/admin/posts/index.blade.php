@@ -64,7 +64,7 @@
                                             <i class="fa-solid fa-pen" aria-hidden="true"></i>
                                         </a>
                                         <form method="POST" action="{{ route('admin.posts.destroy', $post) }}"
-                                              onsubmit="return confirm(@js(__('Are you sure you want to delete this post?')))">
+                                              onsubmit="return confirm(@js(__('Are you sure you want to delete :name?', ['name' => $post->title])))">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm text-danger"

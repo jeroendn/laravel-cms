@@ -26,8 +26,14 @@ class Breadcrumbs
             'posts.index' => [self::crumb(__('Posts'))],
             'posts.show' => self::post($route),
             'admin.posts.index' => [self::crumb(__('Posts'))],
+            'admin.users.index' => [self::crumb(__('Users'))],
             default => [],
         };
+    }
+
+    public static function homeUrl(): string
+    {
+        return request()->routeIs('admin.*') ? route('admin.dashboard') : route('home');
     }
 
     /**
