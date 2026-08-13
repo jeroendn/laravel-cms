@@ -10,6 +10,37 @@ document.querySelectorAll('.toast-progress').forEach((bar) => {
     bar.addEventListener('animationend', () => Toast.getOrCreateInstance(bar.closest('.toast')).hide());
 });
 
+// Flyout submenus in the navbar: Bootstrap 5 has no nested dropdowns, so
+// their toggles carry no data-bs-toggle, and this handler shows/hides them.
+// stopPropagation keeps Bootstrap's document handler from closing the whole
+// dropdown; the parent dropdown closing sweeps every submenu shut.
+document.querySelectorAll('.navbar [data-submenu]').forEach((toggle) => {
+    toggle.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const menu = toggle.nextElementSibling;
+
+        toggle.closest('.dropdown-menu').querySelectorAll('.dropdown-menu.show').forEach((other) => {
+            if (other !== menu) {
+                other.classList.remove('show');
+                other.previousElementSibling.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        toggle.setAttribute('aria-expanded', menu.classList.toggle('show') ? 'true' : 'false');
+    });
+});
+
+document.querySelectorAll('.navbar .nav-item.dropdown').forEach((dropdown) => {
+    dropdown.addEventListener('hide.bs.dropdown', () => {
+        dropdown.querySelectorAll('.dropdown-menu .dropdown-menu.show').forEach((menu) => {
+            menu.classList.remove('show');
+            menu.previousElementSibling.setAttribute('aria-expanded', 'false');
+        });
+    });
+});
+
 const resetLink = document.getElementById('reset-link');
 const resetLinkCopy = document.getElementById('reset-link-copy');
 

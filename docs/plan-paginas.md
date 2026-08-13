@@ -71,7 +71,7 @@ as the record of the rebuild; it can be deleted once everything is done.
       `PageGroup::url()`; `/blog`, the home teaser and the archive view
       are deleted; breadcrumbs walk the bound models' ancestors; heavy
       test rebuild (path matrix, home scenarios, route-order regressions).
-- [ ] **6. The menu** — `App\Support\Menu` + `MenuItem` DTO (two queries,
+- [x] **6. The menu** — `App\Support\Menu` + `MenuItem` DTO (two queries,
       tree + shared comparator in PHP), recursive `partials/menu-item`
       replaces the placeholder dropdowns, flyout CSS (desktop) + inline
       expansion below `md` (burger), small hand-rolled submenu JS,

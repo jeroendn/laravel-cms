@@ -181,7 +181,8 @@ the front door**: it auto-detects context and forwards dev commands into
 - Tabler is a **Bootstrap 5 theme**, so it is utility-class driven: styling
   goes through Bootstrap/Tabler classes in the Blade templates, and only
   what those cannot express belongs in `app.css` (the Quill overrides, the
-  admin frame and the toast countdown bar). Customization happens through the `--tblr-*` custom properties.
+  admin frame, the toast countdown bar and the flyout submenus).
+  Customization happens through the `--tblr-*` custom properties.
   Required fields mark their label with Tabler's `required` class (red
   asterisk), the auth views included; a conditionally required field
   toggles it client-side (the publication date, see §6).
@@ -233,12 +234,37 @@ the front door**: it auto-detects context and forwards dev commands into
   `partials/nav-account.blade.php` (avatar dropdown: switch site ⇄ admin,
   logout) appended for authenticated users. That partial is **last in the
   list on purpose**: `ms-md-auto` right-aligns it once the row is
-  horizontal, and in the burger menu it lands at the bottom. `Home` is a
-  real link; the two remaining dropdowns are **placeholder copy** with
-  `href="#"`, until the dynamic menu step of the rebuild lands. The
+  horizontal, and in the burger menu it lands at the bottom. The
   admin menu is `Dashboard`, `Pages` and `Users`; the brand and the account
   dropdown's "Administration" both lead to the dashboard, the admin area's
   own front page.
+- **The public menu is fully dynamic**: `nav-public.blade.php` loops
+  `App\Support\Menu::items()` (readonly `MenuItem` DTOs; two queries,
+  tree and ordering in PHP) through `partials/menu-item.blade.php` and
+  `menu-dropdown-item.blade.php`. Those are deliberately **not**
+  recursive: bladestan re-analyzes a partial per include site, so a
+  self-including template recurses until phpstan hits its memory limit —
+  and with at most one nesting level a flyout only ever holds plain
+  links anyway. Top level: menu-toggled root groups
+  and ungrouped visible pages, ordered priority DESC then alphabetically
+  (case-insensitive) — the shared comparator all menu levels use. Groups
+  are dropdowns of their menu-toggled visible pages and subgroups,
+  always closed by a "Show All" link to the group overview. That link
+  matters twice for subgroups: clicking a flyout toggle opens the
+  submenu instead of navigating, so "Show All" is the way *into* the
+  overview. There are no fixed items — the home page joins via its own
+  toggle (label = its title, href = `/`) — and the menu never shows
+  invisible pages, but a toggle only affects the menu: every URL stays
+  reachable. A group is `active` anywhere inside its path, a page only
+  on its own URL.
+- **Flyout submenus are hand-rolled** — Bootstrap 5 has no nested
+  dropdowns. `app.css` positions the nested `.dropdown-menu` (flyout to
+  the right ≥`md`, expanding in place inside the burger menu below it)
+  and `app.js` toggles `.show`: the toggles carry `data-submenu` instead
+  of `data-bs-toggle`, `stopPropagation` keeps Bootstrap's document
+  handler from closing the parent dropdown, and that parent's
+  `hide.bs.dropdown` sweeps every open submenu shut. The `dropend`
+  wrapper only supplies Bootstrap's right-pointing caret.
 - **Admin area is visually marked**: a fixed warning-coloured frame around
   the viewport (`.admin-frame`, the one thing Tabler utilities cannot
   express — `position: fixed` + `inset` + a z-index above modals) and a
@@ -470,8 +496,8 @@ as `pages`, no data migration; `/blog` is gone).
   self-parenting. Admin CRUD at `/admin/page-groups` mirrors the
   pages/users style. Deleting a group that still has subgroups or pages
   is refused with the red error toast (and `restrictOnDelete` on both
-  FKs as backstop). A group's URL renders its overview; the dynamic menu
-  comes later in the rebuild (`docs/plan-paginas.md`).
+  FKs as backstop). A group's URL renders its overview; the menu is
+  described in §3.
 - **Editor**: **Quill 2** (npm dependency, BSD-3). Deliberately NOT Trix:
   Trix 2.1.x never gets keyboard input into its document model (text shows
   in the DOM but nothing is saved) — reproduced with both its ESM and UMD
@@ -526,7 +552,7 @@ Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
 `Auth/PasswordResetTest`, `Pages/PublicPagesTest`, `Pages/AdminPagesTest`,
 `Pages/AdminPageGroupsTest`,
 `Admin/DashboardTest`, `Admin/UsersTest`, `ActivityTrackingTest`,
-`NavigationTest`, `BreadcrumbsTest`, `LocalizationTest`,
+`NavigationTest`, `MenuTest`, `BreadcrumbsTest`, `LocalizationTest`,
 `AdminUserMigrationTest`, `MaintenancePageTest`, `UnderConstructionTest`,
 `SearchIndexingTest`) and use `RefreshDatabase` on sqlite `:memory:` — except
 `MaintenancePageTest`, which only renders a view and never touches a
@@ -589,9 +615,6 @@ ticked off** — what exists is described in the sections above.
 - Remove the under-construction placeholder when the site goes live:
       it is tied to `APP_ENV=production` and will not lift by itself
       (see §2).
-- Real menu structure: two of the header dropdowns are still
-      placeholder copy with `#` links until the client delivers the site
-      structure (see §3).
 - Admin dashboard content: `/admin` exists as the landing page of the
       admin area (and the target of its breadcrumb house) but is
       deliberately empty — no widgets decided on yet.
