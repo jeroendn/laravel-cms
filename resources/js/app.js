@@ -74,6 +74,46 @@ if (groupSelect && publishedAtField && draftToggle) {
     sync();
 }
 
+// Live preview of the public URL a page or group will get, mirroring
+// Page::url() / PageGroup::url(). The server still has the last word: it
+// generates the slug itself and rejects duplicate or reserved ones.
+const urlPreview = document.getElementById('url-preview');
+
+if (urlPreview) {
+    const slugInput = document.getElementById('slug');
+    const sourceInput = document.getElementById(urlPreview.dataset.source);
+    const parentSelect = document.getElementById(urlPreview.dataset.parent);
+    const output = urlPreview.querySelector('span');
+
+    // Approximates Str::slug(): decompose accented letters to ASCII, drop
+    // what is neither a letter, a digit nor a separator, collapse the rest.
+    // The map covers the Latin letters no decomposition splits; a script
+    // NFKD cannot reach at all (Cyrillic, Greek) drops out here and is
+    // transliterated server-side only.
+    const untangled = { ø: 'o', æ: 'ae', œ: 'oe', ß: 'ss', đ: 'd', ł: 'l', þ: 'th', ð: 'd' };
+    const slugify = (value) => value
+        .normalize('NFKD')
+        .replaceAll('@', '-at-')
+        .toLowerCase()
+        .replace(/[øæœßđłþð]/g, (letter) => untangled[letter])
+        .replace(/[^a-z0-9\s_-]+/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    const sync = () => {
+        const slug = slugify(slugInput.value.trim() || sourceInput.value);
+        const parentPath = parentSelect.selectedOptions[0]?.dataset.path;
+        const isHome = !parentPath && slug === urlPreview.dataset.homeSlug;
+
+        output.textContent = `${urlPreview.dataset.base}/${[parentPath, isHome ? '' : slug].filter(Boolean).join('/')}`;
+        urlPreview.classList.toggle('d-none', slug === '');
+    };
+
+    [slugInput, sourceInput].forEach((input) => input.addEventListener('input', sync));
+    parentSelect.addEventListener('change', sync);
+    sync();
+}
+
 // WYSIWYG editor for the admin page form. The toolbar is icon-only, so it
 // involves no translatable copy.
 const editorElement = document.getElementById('body-editor');

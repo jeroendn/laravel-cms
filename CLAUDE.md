@@ -494,6 +494,18 @@ the front door**: it auto-detects context and forwards dev commands into
   is refused with the red error toast (and `restrictOnDelete` on both
   FKs as backstop). A group's URL renders its overview; the menu is
   described in §3.
+- **Live URL preview**: both forms render `partials/url-preview.blade.php`
+  under the slug field, which `app.js` fills while typing — from the
+  title/name, the slug and the group select (whose options carry a
+  `data-path`), mirroring `Page::url()` down to the `home` slug that
+  resolves to `/`. Its `slugify()` reimplements `Str::slug()` in JS: NFKD
+  decomposition plus a small map for the Latin letters it does not split
+  (ø, ß, æ …) — verified against the PHP side on 2026-08-13, identical for
+  every Latin case tried. A script NFKD cannot reach (Cyrillic, Greek) is
+  the known gap: the preview drops it, the server transliterates it. Not
+  worth closing — the preview decides nothing, the server generates the
+  real slug on save. It is also the one place where an icon carries the
+  meaning (`fa-link`), to keep translatable copy out of JS.
 - **Editor**: **Quill 2** (npm dependency, BSD-3). Deliberately NOT Trix:
   Trix 2.1.x never gets keyboard input into its document model (text shows
   in the DOM but nothing is saved) — reproduced with both its ESM and UMD

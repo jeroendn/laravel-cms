@@ -58,6 +58,20 @@ class AdminPagesTest extends TestCase
         $edit->assertSee('Existing page');
     }
 
+    public function testTheFormCarriesTheDataForTheLiveUrlPreview(): void
+    {
+        $parent = PageGroup::factory()->create(['slug' => 'health']);
+        PageGroup::factory()->create(['slug' => 'sleep', 'parent_id' => $parent->id]);
+
+        $response = $this->actingAs($this->admin())->get(route('admin.pages.create'));
+
+        $response->assertSee('id="url-preview"', false);
+        $response->assertSee('data-base="' . url('/') . '"', false);
+        $response->assertSee('data-home-slug="home"', false);
+        // A grouped page's URL repeats its group's full path, subgroups included.
+        $response->assertSee('data-path="health/sleep"', false);
+    }
+
     public function testAdminCanCreateDraftWithGeneratedSlug(): void
     {
         $response = $this->actingAs($this->admin())->post(route('admin.pages.store'), [
