@@ -82,4 +82,17 @@ class PageGroup extends Model
     {
         return $this->parent === null ? $this->name : $this->parent->name . ' / ' . $this->name;
     }
+
+    /**
+     * The URL path, without a leading slash: "group" or "group/subgroup".
+     */
+    public function path(): string
+    {
+        return $this->parent === null ? $this->slug : $this->parent->slug . '/' . $this->slug;
+    }
+
+    public function url(): string
+    {
+        return url('/' . $this->path());
+    }
 }

@@ -53,7 +53,7 @@
                                 <td>
                                     <div class="btn-list flex-nowrap justify-content-end">
                                         @if ($page->isVisible())
-                                            <a href="{{ route('pages.show', $page) }}" class="btn btn-sm"
+                                            <a href="{{ $page->url() }}" class="btn btn-sm"
                                                target="_blank" rel="noopener"
                                                title="{{ __('View') }}" aria-label="{{ __('View') }}">
                                                 <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Page;
+use App\Models\PageGroup;
 use Illuminate\Routing\Route;
 
 class Breadcrumbs
@@ -23,8 +24,7 @@ class Breadcrumbs
         }
 
         return match ($route->getName()) {
-            'pages.index' => [self::crumb(__('Pages'))],
-            'pages.show' => self::page($route),
+            'pages.show', 'pages.grouped', 'pages.subgrouped' => self::publicItem($route),
             'admin.pages.index' => [self::crumb(__('Pages'))],
             'admin.page-groups.index' => [self::crumb(__('Page groups'))],
             'admin.users.index' => [self::crumb(__('Users'))],
@@ -38,20 +38,46 @@ class Breadcrumbs
     }
 
     /**
+     * The trail of a dynamic page/group URL, walking the bound model's
+     * ancestors: 🏠 / group / subgroup / page, as deep as the URL goes.
+     *
      * @return list<array{label: string, url: string|null}>
      */
-    private static function page(Route $route): array
+    private static function publicItem(Route $route): array
     {
-        $page = $route->parameter('page');
+        $item = $route->parameter('item');
 
-        if (!$page instanceof Page) {
+        if ($item instanceof PageGroup) {
+            return self::groupTrail($item);
+        }
+
+        if (!$item instanceof Page) {
             return [];
         }
 
-        return [
-            self::crumb(__('Pages'), route('pages.index')),
-            self::crumb($page->title),
-        ];
+        $trail = $item->group === null ? [] : self::groupTrail($item->group, linkLast: true);
+        $trail[] = self::crumb($item->title);
+
+        return $trail;
+    }
+
+    /**
+     * A group and its parent; the group itself only links when a page
+     * crumb follows it.
+     *
+     * @return list<array{label: string, url: string|null}>
+     */
+    private static function groupTrail(PageGroup $group, bool $linkLast = false): array
+    {
+        $trail = [];
+
+        if ($group->parent !== null) {
+            $trail[] = self::crumb($group->parent->name, $group->parent->url());
+        }
+
+        $trail[] = self::crumb($group->name, $linkLast ? $group->url() : null);
+
+        return $trail;
     }
 
     /**

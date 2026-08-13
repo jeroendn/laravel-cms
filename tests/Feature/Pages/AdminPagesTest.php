@@ -356,8 +356,8 @@ class AdminPagesTest extends TestCase
 
         $response = $this->actingAs($this->admin())->get(route('admin.pages.index'));
 
-        $response->assertSee(route('pages.show', $visible));
-        $response->assertDontSee(route('pages.show', $draft));
+        $response->assertSee($visible->url());
+        $response->assertDontSee($draft->url());
     }
 
     private function admin(): User

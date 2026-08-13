@@ -166,6 +166,16 @@ class AdminPageGroupsTest extends TestCase
         $response->assertSessionHasErrors('slug');
     }
 
+    public function testTheHomeSlugIsReservedForTheHomePage(): void
+    {
+        $response = $this->actingAs($this->admin())->post(route('admin.page-groups.store'), [
+            'name' => 'Home',
+            'slug' => 'home',
+        ]);
+
+        $response->assertSessionHasErrors('slug');
+    }
+
     public function testASubgroupMayReuseAReservedSlug(): void
     {
         $parent = PageGroup::factory()->create();

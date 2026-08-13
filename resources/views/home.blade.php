@@ -1,19 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header d-print-none">
-        <h1 class="page-title">{{ __('Recent pages') }}</h1>
-    </div>
-
-    @forelse ($pages as $page)
-        @include('partials.page-card', ['page' => $page])
-    @empty
-        <p>{{ __('The first pages will appear here soon.') }}</p>
-    @endforelse
-
-    @if ($pages->isNotEmpty())
-        <a href="{{ route('pages.index') }}">
-            {{ __('All pages') }}<i class="fa-solid fa-arrow-right ms-2" aria-hidden="true"></i>
-        </a>
-    @endif
+    @isset($page)
+        @include('partials.page-article', ['page' => $page])
+    @endisset
 @endsection

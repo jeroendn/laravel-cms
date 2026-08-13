@@ -31,12 +31,13 @@ class LocalizationTest extends TestCase
         $response->assertSee('Password');
     }
 
-    public function testHomePageIsShownInDutch(): void
+    public function testTheLayoutIsShownInDutch(): void
     {
         app()->setLocale('nl');
 
         $response = $this->get(route('home'));
 
-        $response->assertSee("Binnenkort verschijnen hier de eerste pagina's.");
+        // The burger button's aria-label — a string every public page renders.
+        $response->assertSee('Schakel navigatie');
     }
 }

@@ -81,6 +81,6 @@ class LoginTest extends TestCase
     public function testRegistrationIsDisabled(): void
     {
         $this->get('/register')->assertNotFound();
-        $this->post('/register')->assertNotFound();
+        $this->post('/register')->assertMethodNotAllowed();
     }
 }

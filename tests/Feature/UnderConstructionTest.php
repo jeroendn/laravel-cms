@@ -3,60 +3,70 @@
 namespace Tests\Feature;
 
 use App\Models\Page;
+use App\Models\PageGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class UnderConstructionTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * @return array<string, array{string}>
-     */
-    public static function publicRoutes(): array
-    {
-        return [
-            'home' => ['home'],
-            'archive' => ['pages.index'],
-            'page' => ['pages.show'],
-        ];
-    }
-
     public function testThePublicPagesAreUnaffectedOutsideProduction(): void
     {
-        Page::factory()->visible()->create(['title' => 'Magnesium and sleep']);
+        Page::factory()->visible()->create(['title' => 'Magnesium and sleep', 'slug' => 'sleep']);
 
-        $response = $this->get(route('home'));
+        $response = $this->get('/sleep');
 
         $response->assertOk();
         $response->assertSee('Magnesium and sleep');
     }
 
-    #[DataProvider('publicRoutes')]
-    public function testAGuestOnlySeesThePlaceholderOnProduction(string $route): void
+    public function testAGuestOnlySeesThePlaceholderOnProduction(): void
     {
-        $page = Page::factory()->visible()->create(['title' => 'Magnesium and sleep']);
+        PageGroup::factory()->create(['slug' => 'health']);
+        Page::factory()->visible()->create(['title' => 'Magnesium and sleep', 'slug' => 'sleep']);
         $this->runningOnProduction();
 
-        $response = $this->get(route($route, $route === 'pages.show' ? $page : []));
+        foreach (['/', '/sleep', '/health'] as $url) {
+            $response = $this->get($url);
 
-        $response->assertServiceUnavailable();
-        $response->assertViewIs('under-construction');
-        $response->assertSee(__('This website is under construction'));
-        $response->assertDontSee('Magnesium and sleep');
+            $response->assertServiceUnavailable();
+            $response->assertViewIs('under-construction');
+            $response->assertSee(__('This website is under construction'));
+            $response->assertDontSee('Magnesium and sleep');
+        }
+    }
+
+    /**
+     * The binders resolve the path before the route middleware runs, so a
+     * junk URL stays a 404 instead of suggesting there is a page there.
+     */
+    public function testAnUnknownPathIs404NotThePlaceholder(): void
+    {
+        $this->runningOnProduction();
+
+        $this->get('/nope')->assertNotFound();
+        $this->get('/nope/nope')->assertNotFound();
+        $this->get('/nope/nope/nope')->assertNotFound();
+    }
+
+    /** The health route is registered before the catch-alls can swallow it. */
+    public function testTheHealthEndpointStaysReachable(): void
+    {
+        $this->runningOnProduction();
+
+        $this->get('/up')->assertOk();
     }
 
     public function testAnAuthenticatedUserStillSeesTheRealSite(): void
     {
-        Page::factory()->visible()->create(['title' => 'Magnesium and sleep']);
+        Page::factory()->visible()->create(['title' => 'Magnesium and sleep', 'slug' => 'sleep']);
         $this->runningOnProduction();
 
-        $response = $this->actingAs(User::factory()->create())->get(route('home'));
+        $response = $this->actingAs(User::factory()->create())->get('/sleep');
 
         $response->assertOk();
-        $response->assertViewIs('home');
         $response->assertSee('Magnesium and sleep');
     }
 

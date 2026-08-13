@@ -111,7 +111,7 @@ visitors get a raw **500** for the whole deploy (measured 2026-08-06):
 ### Under construction (temporary)
 
 While the site is being built, `App\Http\Middleware\UnderConstruction`
-answers guests on the three public routes with
+answers guests on the public routes with
 `resources/views/under-construction.blade.php`. It keys off `APP_ENV`
 (`App::isProduction()`) — no separate flag, decided 2026-08-08 — so dev
 and the tests (`APP_ENV=testing`) always show the real pages.
@@ -122,8 +122,9 @@ and the tests (`APP_ENV=testing`) always show the real pages.
   password reset stay reachable, and any authenticated user sees the whole
   site again, admin area included. That is the only way in — the public
   site still shows no login link, an admin types `/login` himself.
-- Route middleware runs *after* the web group's `SubstituteBindings`, so an
-  unknown `/blog/{slug}` keeps 404-ing instead of showing the placeholder.
+- Route middleware runs *after* the web group's `SubstituteBindings`, so
+  the catch-all binders (§6) 404 an unknown path before the placeholder
+  can answer; `/up` sits outside the group and stays reachable.
 - Prod caches its config (`artisan optimize` in `./deploy`), so `APP_ENV`
   changes only land with a redeploy.
 - **This has to be removed at launch** — prod stays `APP_ENV=production`
@@ -232,9 +233,9 @@ the front door**: it auto-detects context and forwards dev commands into
   `partials/nav-account.blade.php` (avatar dropdown: switch site ⇄ admin,
   logout) appended for authenticated users. That partial is **last in the
   list on purpose**: `ms-md-auto` right-aligns it once the row is
-  horizontal, and in the burger menu it lands at the bottom. `Home` and
-  `Pages` are real links; the two remaining dropdowns are **placeholder
-  copy** with `href="#"`, waiting on the client's real site structure. The
+  horizontal, and in the burger menu it lands at the bottom. `Home` is a
+  real link; the two remaining dropdowns are **placeholder copy** with
+  `href="#"`, until the dynamic menu step of the rebuild lands. The
   admin menu is `Dashboard`, `Pages` and `Users`; the brand and the account
   dropdown's "Administration" both lead to the dashboard, the admin area's
   own front page.
@@ -251,10 +252,9 @@ the front door**: it auto-detects context and forwards dev commands into
   create/edit forms stay in that group on purpose: they fill the layout's
   `@section('back')` instead, which sits in the same slot, so a page shows
   either a trail or a back link and never both. New routes get a `match`
-  arm; labels come from the bound model where there is one (`pages.show`).
-  A page detail page is `🏠 / Pages / <title>` — the "Pages" step only
-  became meaningful once `/blog` existed; before that it would have pointed
-  at the same page as the house. The house itself is not always `/`:
+  arm; the dynamic page/group URLs share one arm that walks the bound
+  models' ancestors (`🏠 / group / subgroup / title`, as deep as the URL
+  goes — every step except the last links). The house itself is not always `/`:
   `Breadcrumbs::homeUrl()` points it at the admin dashboard inside the admin
   area, so a trail never leaves the area it belongs to.
 - Both hang off `@adminArea`, a `Blade::if()` registered in
@@ -403,10 +403,9 @@ the front door**: it auto-detects context and forwards dev commands into
 
 ## 6. Pages
 
-Formerly the blog; renamed as the first step of the pages rebuild
-(`docs/plan-paginas.md` — the empty `posts` table was dropped and
-recreated as `pages`, no data migration). The public URLs deliberately
-still say `/blog` until the dynamic URL step of the rebuild lands.
+Formerly the blog; rebuilt into a generic page system per
+`docs/plan-paginas.md` (the empty `posts` table was dropped and recreated
+as `pages`, no data migration; `/blog` is gone).
 
 - **Model `Page`**: `title`, `slug` (unique, public URL key), `body`
   (HTML from the editor), `is_draft` toggle (default on, so a new page
@@ -429,11 +428,26 @@ still say `/blog` until the dynamic URL step of the rebuild lands.
   automatically. `home` is excepted for pages — that slug becomes the
   home page and is served by the application itself at `/`. Grouped
   pages and subgroups never occupy a first URL segment and skip the rule.
-- **Public**: `/` teases the `PageController::RECENT` newest visible
-  pages and links on to `/blog`, the full archive (newest first,
-  `simplePaginate(10)`); `/blog/{slug}` shows one page. Drafts and
-  scheduled pages appear in none of the three. Both lists render the same
-  `partials/page-card.blade.php`.
+- **Public URLs are dynamic**: `/{slug}` is an ungrouped page or a root
+  group, `/{group}/{slug}` a grouped page or a subgroup,
+  `/{group}/{subgroup}/{slug}` a subgroup page — three catch-all GET
+  routes (`[a-z0-9-]+` per segment, names `pages.show`/`.grouped`/
+  `.subgrouped`), registered **last** so every literal route wins, with
+  the admin group registered before them. `Route::bind()` closures in
+  `AppServiceProvider` resolve the segments to models inside
+  `SubstituteBindings` — i.e. before route middleware, see §2. The
+  page-or-group lookups cannot be ambiguous thanks to the cross-table
+  slug rule; a grouped page's bare slug 404s (only the full path
+  serves it). Visibility is a controller concern
+  (`abort_unless(isVisible)`); a group URL renders `pages/group.blade.php`:
+  its **own** visible pages (newest first, `simplePaginate(10)`,
+  `partials/page-card.blade.php`) plus subgroup links. `Page::url()` /
+  `PageGroup::url()` build all public URLs — views never hand-assemble
+  paths.
+- **Home**: `/` renders the ungrouped page slugged `home` (via
+  `partials/page-article.blade.php`, shared with `pages/show`) or a bare
+  layout while no visible one exists; `/home` 301-redirects to `/`. A
+  draft home page counts as absent.
 - **Admin CRUD** at `/admin/pages` (auth middleware on the route group;
   every authenticated user is an admin). Create/edit share
   `admin/pages/_form.blade.php`. The slug is generated from the title
@@ -456,8 +470,8 @@ still say `/blog` until the dynamic URL step of the rebuild lands.
   self-parenting. Admin CRUD at `/admin/page-groups` mirrors the
   pages/users style. Deleting a group that still has subgroups or pages
   is refused with the red error toast (and `restrictOnDelete` on both
-  FKs as backstop). Groups do nothing publicly yet — menu and URLs come
-  later in the rebuild (`docs/plan-paginas.md`).
+  FKs as backstop). A group's URL renders its overview; the dynamic menu
+  comes later in the rebuild (`docs/plan-paginas.md`).
 - **Editor**: **Quill 2** (npm dependency, BSD-3). Deliberately NOT Trix:
   Trix 2.1.x never gets keyboard input into its document model (text shows
   in the DOM but nothing is saved) — reproduced with both its ESM and UMD

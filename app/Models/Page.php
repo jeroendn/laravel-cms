@@ -89,6 +89,19 @@ class Page extends Model
         return $this->published_at !== null && $this->published_at->lte(now());
     }
 
+    /**
+     * The page's public URL: /slug, /group/slug or /group/subgroup/slug.
+     * The ungrouped page slugged "home" is the home page and lives at /.
+     */
+    public function url(): string
+    {
+        if ($this->group === null) {
+            return url($this->slug === 'home' ? '/' : '/' . $this->slug);
+        }
+
+        return url('/' . $this->group->path() . '/' . $this->slug);
+    }
+
     public function isScheduled(): bool
     {
         return !$this->is_draft

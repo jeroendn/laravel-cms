@@ -62,7 +62,7 @@ as the record of the rebuild; it can be deleted once everything is done.
       gains group select, switches, priority, and JS show/hide of the date
       field; status badges Draft/Scheduled/Published; the validation
       matrix (scope × toggle × date) lands as tests first.
-- [ ] **5. Dynamic URLs, home, group overviews, breadcrumbs** — admin
+- [x] **5. Dynamic URLs, home, group overviews, breadcrumbs** — admin
       routes registered before the public group; `/`, `/home` redirect and
       the 1–3 segment catch-alls (last) inside the UnderConstruction
       group; `Route::bind()` closures resolve paths before route

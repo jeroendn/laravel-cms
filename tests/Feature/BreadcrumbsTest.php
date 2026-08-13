@@ -14,21 +14,47 @@ class BreadcrumbsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testThePagePageSitsBehindTheHomeIconAndTheArchive(): void
+    public function testAnUngroupedPageSitsDirectlyBehindTheHomeIcon(): void
     {
-        $page = Page::factory()->visible()->create(['title' => 'A published page']);
+        $page = Page::factory()->visible()->create(['title' => 'A visible page']);
 
-        $trail = $this->trail($this->get(route('pages.show', $page)));
+        $trail = $this->trail($this->get($page->url()));
 
         $this->assertStringContainsString('fa-house', $trail);
-        $this->assertStringContainsString(route('pages.index'), $trail);
-        $this->assertStringContainsString('A published page', $trail);
+        $this->assertStringContainsString('A visible page', $trail);
     }
 
-    public function testTheArchiveAndTheAdminOverviewsHaveBreadcrumbs(): void
+    public function testAPageTrailWalksItsGroupAncestors(): void
     {
-        $this->assertStringContainsString('fa-house', $this->trail($this->get(route('pages.index'))));
+        $group = PageGroup::factory()->create(['name' => 'Health', 'slug' => 'health']);
+        $subgroup = PageGroup::factory()->create(['name' => 'Minerals', 'slug' => 'minerals', 'parent_id' => $group->id]);
+        $page = Page::factory()->visible()->create([
+            'title' => 'Magnesium basics',
+            'page_group_id' => $subgroup->id,
+            'published_at' => now()->subDay(),
+        ]);
 
+        $trail = $this->trail($this->get($page->url()));
+
+        $this->assertStringContainsString('fa-house', $trail);
+        $this->assertStringContainsString($group->url(), $trail);
+        $this->assertStringContainsString($subgroup->url(), $trail);
+        $this->assertStringContainsString('Magnesium basics', $trail);
+    }
+
+    public function testAGroupOverviewTrailLinksItsParent(): void
+    {
+        $group = PageGroup::factory()->create(['name' => 'Health', 'slug' => 'health']);
+        $subgroup = PageGroup::factory()->create(['name' => 'Minerals', 'slug' => 'minerals', 'parent_id' => $group->id]);
+
+        $trail = $this->trail($this->get($subgroup->url()));
+
+        $this->assertStringContainsString($group->url(), $trail);
+        $this->assertStringContainsString('Minerals', $trail);
+    }
+
+    public function testTheAdminOverviewsHaveBreadcrumbs(): void
+    {
         $admin = User::factory()->create();
         $this->assertStringContainsString(
             'fa-house',
