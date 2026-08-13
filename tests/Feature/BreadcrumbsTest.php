@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\Page;
+use App\Models\PageGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
@@ -35,6 +36,10 @@ class BreadcrumbsTest extends TestCase
         );
         $this->assertStringContainsString(
             'fa-house',
+            $this->trail($this->actingAs($admin)->get(route('admin.page-groups.index'))),
+        );
+        $this->assertStringContainsString(
+            'fa-house',
             $this->trail($this->actingAs($admin)->get(route('admin.users.index'))),
         );
     }
@@ -49,12 +54,15 @@ class BreadcrumbsTest extends TestCase
     public function testTheHomePagesAndTheAdminFormsHaveNone(): void
     {
         $page = Page::factory()->create();
+        $group = PageGroup::factory()->create();
         $admin = User::factory()->create();
 
         $this->assertSame('', $this->trail($this->get(route('home'))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.dashboard'))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.pages.create'))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.pages.edit', $page))));
+        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.page-groups.create'))));
+        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.page-groups.edit', $group))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.users.create'))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.users.edit', $admin))));
     }

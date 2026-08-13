@@ -44,7 +44,8 @@ Public: `/` teases the newest pages, `/blog` is the full archive and
 `/blog/{slug}` a single page; drafts stay hidden. (The `/blog` URLs are
 temporary — the pages rebuild replaces them with dynamic URLs, see
 `docs/plan-paginas.md`.) The admin area starts at `/admin`, with the pages
-under `/admin/pages` and the accounts under `/admin/users`.
+under `/admin/pages`, the page groups under `/admin/page-groups` and the
+accounts under `/admin/users`.
 
 Login is at `/login`; registration is disabled and the public site shows
 no login link. The migrations bootstrap an admin account

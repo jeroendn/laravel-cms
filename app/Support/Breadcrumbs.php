@@ -26,6 +26,7 @@ class Breadcrumbs
             'pages.index' => [self::crumb(__('Pages'))],
             'pages.show' => self::page($route),
             'admin.pages.index' => [self::crumb(__('Pages'))],
+            'admin.page-groups.index' => [self::crumb(__('Page groups'))],
             'admin.users.index' => [self::crumb(__('Users'))],
             default => [],
         };

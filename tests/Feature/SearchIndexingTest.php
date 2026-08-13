@@ -31,6 +31,7 @@ class SearchIndexingTest extends TestCase
         return [
             'dashboard' => ['admin.dashboard'],
             'pages' => ['admin.pages.index'],
+            'page groups' => ['admin.page-groups.index'],
             'users' => ['admin.users.index'],
         ];
     }

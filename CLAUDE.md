@@ -188,7 +188,9 @@ the front door**: it auto-detects context and forwards dev commands into
   therefore a direct dependency in `package.json`, not a transitive one.
 - **Flash messages are toasts**: the layout renders `session('status')` as a
   single toast (bottom center, dismissable) — views never render their own
-  status alert. Bootstrap does not auto-show toasts, so `app.js` calls
+  status alert. `session('error')` gets the same treatment in red
+  (`text-bg-danger`, `role="alert"`); it is used when deleting a non-empty
+  page group is refused. Bootstrap does not auto-show toasts, so `app.js` calls
   `.show()` on every `.toast`. Auto-hide (15 s) is NOT Bootstrap's
   (`data-bs-autohide="false"`): a `.toast-progress` countdown bar shrinks via
   a CSS animation and `app.js` hides the toast on `animationend`, so the bar
@@ -421,6 +423,20 @@ still say `/blog` until the dynamic URL step of the rebuild lands.
   scheduled, and the field is prefilled on edit, so re-saving keeps the
   original publish date. The overview shows the status as a badge:
   green "Published", yellow "Scheduled", grey "Draft".
+- **Page groups** (`PageGroup`): `name`, `slug`, `show_in_menu`,
+  `priority` (default 0 — higher will sort further left in the menu, ties
+  alphabetically) and a nullable `parent_id`, **max one level deep**: the
+  form only offers root groups as parent and the requests reject a
+  non-root parent, a parent for a group that has children, and
+  self-parenting. Admin CRUD at `/admin/page-groups` mirrors the
+  pages/users style. Slugs are **DB-unique per table** (decided
+  2026-08-13); the extra cross-table requirement — pages and groups may
+  never share a slug — lands with the page fields step as a validation
+  rule, since no DB constraint spans two tables. Deleting a group that still has subgroups
+  is refused with the red error toast (and `restrictOnDelete` as
+  backstop); pages will join that guard when they get a `page_group_id`.
+  Groups do nothing publicly yet — menu and URLs come later in the
+  rebuild (`docs/plan-paginas.md`).
 - **Editor**: **Quill 2** (npm dependency, BSD-3). Deliberately NOT Trix:
   Trix 2.1.x never gets keyboard input into its document model (text shows
   in the DOM but nothing is saved) — reproduced with both its ESM and UMD
@@ -463,7 +479,7 @@ still say `/blog` until the dynamic URL step of the rebuild lands.
   exactly those patterns (scoped to constructs that only exist in compiled
   templates — real app code is unaffected). Shared partials need **no**
   `@var` type hints — bladestan propagates the `@include` variables itself
-  (verified 2026-08-13 by removing them all). The one exception is the two
+  (verified 2026-08-13 by removing them all). The one exception is the
   `_form` partials: create renders them without the model, edit with a
   never-null one, so the `Model|null` union only exists in their
   `@php /** @var ... */ @endphp` docblock — without it phpstan reports
@@ -473,6 +489,7 @@ still say `/blog` until the dynamic URL step of the rebuild lands.
 
 Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
 `Auth/PasswordResetTest`, `Pages/PublicPagesTest`, `Pages/AdminPagesTest`,
+`Pages/AdminPageGroupsTest`,
 `Admin/DashboardTest`, `Admin/UsersTest`, `ActivityTrackingTest`,
 `NavigationTest`, `BreadcrumbsTest`, `LocalizationTest`,
 `AdminUserMigrationTest`, `MaintenancePageTest`, `UnderConstructionTest`,

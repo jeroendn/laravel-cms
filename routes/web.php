@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
+use App\Http\Controllers\Admin\PageGroupController as AdminPageGroupController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\PageController;
 use App\Http\Middleware\NoIndex;
@@ -29,6 +30,7 @@ Route::middleware(UnderConstruction::class)->group(function (): void {
 Route::middleware(['auth', NoIndex::class])->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::resource('pages', AdminPageController::class)->except('show');
+    Route::resource('page-groups', AdminPageGroupController::class)->except('show');
     Route::post('users/{user}/reset-link', [AdminUserController::class, 'resetLink'])->name('users.reset-link');
     Route::resource('users', AdminUserController::class)->except('show');
 });

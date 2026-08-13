@@ -29,10 +29,12 @@ as the record of the rebuild; it can be deleted once everything is done.
   to the group overview ("Show All"). Toggles only affect the menu — URLs
   stay reachable.
 - **URLs**: `/{slug}`, `/{group}/{slug}`, `/{group}/{subgroup}/{slug}`.
-  Slugs are unique per parent scope **across pages and groups together**;
-  root slugs must not collide with application routes (`/admin`, `/login`,
-  …) — the reserved list is derived from the route table. A grouped page is
-  only reachable at its full path.
+  Slugs are DB-unique within their own table; a validation rule
+  additionally keeps pages and groups from ever sharing a slug
+  (cross-table — lands with commit 4). Root slugs must not collide with
+  application routes (`/admin`, `/login`, …) — the reserved list is
+  derived from the route table. A grouped page is only reachable at its
+  full path.
 - **Home**: the ungrouped page slugged `home` renders at `/` (`/home`
   301-redirects there); without one, `/` is the bare layout. No fixed Home
   menu item — the home page appears in the menu via its own toggle.
@@ -45,7 +47,7 @@ as the record of the rebuild; it can be deleted once everything is done.
       `pages.*`; public URLs stay `/blog` until commit 5), `/admin/pages`,
       breadcrumbs, nav labels, tests (`tests/Feature/Blog/` →
       `Pages/`), lang keys, docs, composer.json. Zero behavior change.
-- [ ] **3. PageGroup entity + admin CRUD** — `page_groups` migration
+- [x] **3. PageGroup entity + admin CRUD** — `page_groups` migration
       (`parent_id` self-FK, restrict on delete), model/factory/requests
       with the one-level nesting validations, CRUD at `/admin/page-groups`
       in the existing posts/users style, blocked delete with an error
@@ -54,8 +56,8 @@ as the record of the rebuild; it can be deleted once everything is done.
 - [ ] **4. Page fields + visibility semantics** — migration adds
       `is_published`, `show_in_menu`, `priority`, `page_group_id`;
       `Page::isVisible()`/`visible()` replace `published()`; the
-      cross-table per-scope slug rule + reserved root slugs from the route
-      table; `published_at` required when published + grouped; admin form
+      cross-table slug rule (pages ↔ groups) + reserved root slugs from
+      the route table; `published_at` required when published + grouped; admin form
       gains group select, switches, priority, and JS show/hide of the date
       field; status badges Draft/Scheduled/Published; the validation
       matrix (scope × toggle × date) lands as tests first.
