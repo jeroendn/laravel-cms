@@ -1,12 +1,8 @@
 {
     "name": "jeroendn/magnesium-website",
-    "description": "Magnesium — blog website",
+    "description": "Magnesium — website",
     "license": "proprietary",
     "type": "project",
-    "keywords": [
-        "laravel",
-        "blog"
-    ],
     "require": {
         "php": "^8.5",
         "ext-pdo": "*",

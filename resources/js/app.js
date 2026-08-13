@@ -10,6 +10,37 @@ document.querySelectorAll('.toast-progress').forEach((bar) => {
     bar.addEventListener('animationend', () => Toast.getOrCreateInstance(bar.closest('.toast')).hide());
 });
 
+// Flyout submenus in the navbar: Bootstrap 5 has no nested dropdowns, so
+// their toggles carry no data-bs-toggle, and this handler shows/hides them.
+// stopPropagation keeps Bootstrap's document handler from closing the whole
+// dropdown; the parent dropdown closing sweeps every submenu shut.
+document.querySelectorAll('.navbar [data-submenu]').forEach((toggle) => {
+    toggle.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const menu = toggle.nextElementSibling;
+
+        toggle.closest('.dropdown-menu').querySelectorAll('.dropdown-menu.show').forEach((other) => {
+            if (other !== menu) {
+                other.classList.remove('show');
+                other.previousElementSibling.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        toggle.setAttribute('aria-expanded', menu.classList.toggle('show') ? 'true' : 'false');
+    });
+});
+
+document.querySelectorAll('.navbar .nav-item.dropdown').forEach((dropdown) => {
+    dropdown.addEventListener('hide.bs.dropdown', () => {
+        dropdown.querySelectorAll('.dropdown-menu .dropdown-menu.show').forEach((menu) => {
+            menu.classList.remove('show');
+            menu.previousElementSibling.setAttribute('aria-expanded', 'false');
+        });
+    });
+});
+
 const resetLink = document.getElementById('reset-link');
 const resetLinkCopy = document.getElementById('reset-link-copy');
 
@@ -24,7 +55,26 @@ if (resetLink && resetLinkCopy) {
     });
 }
 
-// WYSIWYG editor for the admin post form. The toolbar is icon-only, so it
+// A publication date only applies to grouped pages, and is required once
+// the page is no longer a draft — so the block follows the group select
+// and the label's asterisk follows the draft toggle. Cosmetic only; the
+// server nulls the date for ungrouped pages and validates regardless.
+const groupSelect = document.getElementById('page_group_id');
+const publishedAtField = document.getElementById('published-at-field');
+const draftToggle = document.querySelector('input[name="is_draft"]');
+
+if (groupSelect && publishedAtField && draftToggle) {
+    const dateLabel = publishedAtField.querySelector('.form-label');
+    const sync = () => {
+        publishedAtField.classList.toggle('d-none', groupSelect.value === '');
+        dateLabel.classList.toggle('required', !draftToggle.checked);
+    };
+    groupSelect.addEventListener('change', sync);
+    draftToggle.addEventListener('change', sync);
+    sync();
+}
+
+// WYSIWYG editor for the admin page form. The toolbar is icon-only, so it
 // involves no translatable copy.
 const editorElement = document.getElementById('body-editor');
 
@@ -50,7 +100,7 @@ if (editorElement) {
     quill.root.setAttribute('aria-multiline', 'true');
     quill.root.setAttribute('aria-labelledby', 'body-label');
 
-    // Seed the editor from the hidden input (existing post, or old() input
+    // Seed the editor from the hidden input (existing page, or old() input
     // after a failed validation round-trip).
     if (input.value) {
         quill.setContents(quill.clipboard.convert({ html: input.value }));

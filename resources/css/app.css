@@ -22,7 +22,7 @@
     --tblr-primary-fg: var(--tblr-gray-900);
 }
 
-/* Quill (admin post form) ships its own complete styling; these are the only
+/* Quill (admin page form) ships its own complete styling; these are the only
    places it does not survive contact with Tabler.
 
    The surface has to stay light in dark mode: Quill's toolbar icons are
@@ -78,4 +78,26 @@
     position: fixed;
     inset: 0;
     z-index: 1090;
+}
+
+/* Flyout submenus in the navbar — Bootstrap 5 has no nested dropdowns.
+   app.js toggles .show on them; above the burger breakpoint they fly out
+   to the right of their parent dropdown, below it they expand in place. */
+@media (min-width: 768px) {
+    .navbar .dropdown-menu .dropdown-menu {
+        position: absolute;
+        top: 0;
+        left: 100%;
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .navbar .dropdown-menu .dropdown-menu {
+        position: static;
+        border: 0;
+        box-shadow: none;
+        margin-left: 1rem;
+        padding-top: 0;
+    }
 }

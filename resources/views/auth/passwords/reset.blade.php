@@ -13,7 +13,7 @@
                 <input type="hidden" name="token" value="{{ $token }}">
 
                 <div class="mb-3">
-                    <label class="form-label" for="email">{{ __('Email Address') }}</label>
+                    <label class="form-label required" for="email">{{ __('Email Address') }}</label>
                     <input id="email" type="email" name="email" value="{{ $email ?? old('email') }}"
                            class="form-control @error('email') is-invalid @enderror"
                            required autocomplete="email" autofocus>
@@ -23,7 +23,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label" for="password">{{ __('New password') }}</label>
+                    <label class="form-label required" for="password">{{ __('New password') }}</label>
                     <input id="password" type="password" name="password"
                            class="form-control @error('password') is-invalid @enderror"
                            required autocomplete="new-password">
@@ -33,7 +33,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label" for="password-confirm">{{ __('Repeat new password') }}</label>
+                    <label class="form-label required" for="password-confirm">{{ __('Repeat new password') }}</label>
                     <input id="password-confirm" type="password" name="password_confirmation"
                            class="form-control" required autocomplete="new-password">
                 </div>

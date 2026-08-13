@@ -10,7 +10,7 @@
                 @csrf
 
                 <div class="mb-3">
-                    <label class="form-label" for="email">{{ __('Email Address') }}</label>
+                    <label class="form-label required" for="email">{{ __('Email Address') }}</label>
                     <input id="email" type="email" name="email" value="{{ old('email') }}"
                            class="form-control @error('email') is-invalid @enderror"
                            required autocomplete="email" autofocus>
@@ -20,7 +20,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label" for="password">{{ __('Password') }}</label>
+                    <label class="form-label required" for="password">{{ __('Password') }}</label>
                     <input id="password" type="password" name="password"
                            class="form-control @error('password') is-invalid @enderror"
                            required autocomplete="current-password">

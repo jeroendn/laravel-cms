@@ -1,8 +1,3 @@
-@php
-    /** @var list<array{label: string, url: string|null}> $breadcrumbs */
-    /** @var string $homeUrl */
-@endphp
-
 @if ($breadcrumbs !== [])
     <ol class="breadcrumb d-print-none" aria-label="{{ __('Breadcrumbs') }}">
         <li class="breadcrumb-item">

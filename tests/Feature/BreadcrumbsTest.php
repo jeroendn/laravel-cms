@@ -3,7 +3,8 @@
 namespace Tests\Feature;
 
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Post;
+use App\Models\Page;
+use App\Models\PageGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
@@ -13,25 +14,55 @@ class BreadcrumbsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testThePostPageSitsBehindTheHomeIconAndTheArchive(): void
+    public function testAnUngroupedPageSitsDirectlyBehindTheHomeIcon(): void
     {
-        $post = Post::factory()->published()->create(['title' => 'A published post']);
+        $page = Page::factory()->visible()->create(['title' => 'A visible page']);
 
-        $trail = $this->trail($this->get(route('posts.show', $post)));
+        $trail = $this->trail($this->get($page->url()));
 
         $this->assertStringContainsString('fa-house', $trail);
-        $this->assertStringContainsString(route('posts.index'), $trail);
-        $this->assertStringContainsString('A published post', $trail);
+        $this->assertStringContainsString('A visible page', $trail);
     }
 
-    public function testTheArchiveAndTheAdminOverviewsHaveBreadcrumbs(): void
+    public function testAPageTrailWalksItsGroupAncestors(): void
     {
-        $this->assertStringContainsString('fa-house', $this->trail($this->get(route('posts.index'))));
+        $group = PageGroup::factory()->create(['name' => 'Health', 'slug' => 'health']);
+        $subgroup = PageGroup::factory()->create(['name' => 'Minerals', 'slug' => 'minerals', 'parent_id' => $group->id]);
+        $page = Page::factory()->visible()->create([
+            'title' => 'Magnesium basics',
+            'page_group_id' => $subgroup->id,
+            'published_at' => now()->subDay(),
+        ]);
 
+        $trail = $this->trail($this->get($page->url()));
+
+        $this->assertStringContainsString('fa-house', $trail);
+        $this->assertStringContainsString($group->url(), $trail);
+        $this->assertStringContainsString($subgroup->url(), $trail);
+        $this->assertStringContainsString('Magnesium basics', $trail);
+    }
+
+    public function testAGroupOverviewTrailLinksItsParent(): void
+    {
+        $group = PageGroup::factory()->create(['name' => 'Health', 'slug' => 'health']);
+        $subgroup = PageGroup::factory()->create(['name' => 'Minerals', 'slug' => 'minerals', 'parent_id' => $group->id]);
+
+        $trail = $this->trail($this->get($subgroup->url()));
+
+        $this->assertStringContainsString($group->url(), $trail);
+        $this->assertStringContainsString('Minerals', $trail);
+    }
+
+    public function testTheAdminOverviewsHaveBreadcrumbs(): void
+    {
         $admin = User::factory()->create();
         $this->assertStringContainsString(
             'fa-house',
-            $this->trail($this->actingAs($admin)->get(route('admin.posts.index'))),
+            $this->trail($this->actingAs($admin)->get(route('admin.pages.index'))),
+        );
+        $this->assertStringContainsString(
+            'fa-house',
+            $this->trail($this->actingAs($admin)->get(route('admin.page-groups.index'))),
         );
         $this->assertStringContainsString(
             'fa-house',
@@ -41,20 +72,23 @@ class BreadcrumbsTest extends TestCase
 
     public function testInTheAdminAreaTheHouseLeadsToTheDashboard(): void
     {
-        $trail = $this->trail($this->actingAs(User::factory()->create())->get(route('admin.posts.index')));
+        $trail = $this->trail($this->actingAs(User::factory()->create())->get(route('admin.pages.index')));
 
         $this->assertStringContainsString('href="' . route('admin.dashboard') . '"', $trail);
     }
 
     public function testTheHomePagesAndTheAdminFormsHaveNone(): void
     {
-        $post = Post::factory()->create();
+        $page = Page::factory()->create();
+        $group = PageGroup::factory()->create();
         $admin = User::factory()->create();
 
         $this->assertSame('', $this->trail($this->get(route('home'))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.dashboard'))));
-        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.posts.create'))));
-        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.posts.edit', $post))));
+        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.pages.create'))));
+        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.pages.edit', $page))));
+        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.page-groups.create'))));
+        $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.page-groups.edit', $group))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.users.create'))));
         $this->assertSame('', $this->trail($this->actingAs($admin)->get(route('admin.users.edit', $admin))));
     }

@@ -1,9 +1,3 @@
-@php
-    /** @var \Illuminate\Contracts\Pagination\Paginator $paginator */
-    /** @var string $previousLabel */
-    /** @var string $nextLabel */
-@endphp
-
 @if ($paginator->hasPages())
     <nav aria-label="{{ __('Pagination') }}">
         <ul class="pagination">

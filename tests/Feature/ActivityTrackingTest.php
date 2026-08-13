@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Page;
 use App\Models\User;
 use App\Support\OnlineUsers;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,8 +29,9 @@ class ActivityTrackingTest extends TestCase
     public function testActivityOnThePublicSiteCountsToo(): void
     {
         $user = User::factory()->create();
+        $page = Page::factory()->visible()->create();
 
-        $this->actingAs($user)->get(route('posts.index'));
+        $this->actingAs($user)->get($page->url());
 
         $this->assertNotNull($user->refresh()->last_active_at);
     }

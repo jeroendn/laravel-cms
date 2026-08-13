@@ -2,7 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Post;
+use App\Models\Page;
+use App\Models\PageGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -30,7 +31,8 @@ class SearchIndexingTest extends TestCase
     {
         return [
             'dashboard' => ['admin.dashboard'],
-            'posts' => ['admin.posts.index'],
+            'pages' => ['admin.pages.index'],
+            'page groups' => ['admin.page-groups.index'],
             'users' => ['admin.users.index'],
         ];
     }
@@ -67,9 +69,10 @@ class SearchIndexingTest extends TestCase
 
     public function testThePublicPagesStayIndexable(): void
     {
-        $post = Post::factory()->published()->create();
+        $page = Page::factory()->visible()->create();
+        $group = PageGroup::factory()->create(['slug' => 'health']);
 
-        foreach ([route('home'), route('posts.index'), route('posts.show', $post)] as $url) {
+        foreach ([route('home'), $page->url(), $group->url()] as $url) {
             $response = $this->get($url);
 
             $response->assertOk();
