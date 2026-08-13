@@ -6,19 +6,14 @@ use Closure;
 use Override;
 use App\Models\PageGroup;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 
 class UpdatePageGroupRequest extends StorePageGroupRequest
 {
-    /**
-     * @return array<string, list<mixed>>
-     */
     #[Override]
-    public function rules(): array
+    protected function uniqueSlugRule(): Unique
     {
-        $rules = parent::rules();
-        $rules['slug'] = ['required', 'string', 'max:255', Rule::unique('page_groups', 'slug')->ignore($this->group())];
-
-        return $rules;
+        return Rule::unique('page_groups', 'slug')->ignore($this->group());
     }
 
     #[Override]

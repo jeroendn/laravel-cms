@@ -24,17 +24,22 @@ class PageFactory extends Factory
             'title' => $title,
             'slug' => Str::slug($title),
             'body' => fake()->paragraphs(3, true),
+            'is_draft' => true,
+            'show_in_menu' => false,
+            'priority' => 0,
+            'page_group_id' => null,
             'published_at' => null,
         ];
     }
 
     /**
-     * Indicate that the page is publicly visible.
+     * Indicate that the page is publicly visible. A grouped page
+     * additionally needs a past publication date.
      */
-    public function published(): static
+    public function visible(): static
     {
         return $this->state(fn(array $attributes) => [
-            'published_at' => now()->subDay(),
+            'is_draft' => false,
         ]);
     }
 }

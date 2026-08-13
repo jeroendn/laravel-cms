@@ -11,9 +11,10 @@ as the record of the rebuild; it can be deleted once everything is done.
 - **Pages** replace posts. Prod's `posts` table is empty → dropped, no data
   migration, no redirects (the site is still behind the under-construction
   placeholder).
-- New page fields: `is_published` toggle (new page = draft), `show_in_menu`
-  toggle, `priority` (int, default 0 — higher sorts further left in the
-  menu; ties sort alphabetically), optional `page_group_id`.
+- New page fields: `is_draft` toggle (default on — a new page is a
+  draft; the form labels it "Concept"), `show_in_menu` toggle, `priority`
+  (int, default 0 — higher sorts further left in the menu; ties sort
+  alphabetically), optional `page_group_id`.
 - `published_at` only applies to pages **in a group**: required once such a
   page is published, a future date keeps it hidden until then (scheduling
   stays), and the date is only shown (form + public page) for grouped pages.
@@ -53,8 +54,8 @@ as the record of the rebuild; it can be deleted once everything is done.
       in the existing posts/users style, blocked delete with an error
       toast (layout gains a `session('error')` twin), admin nav +
       breadcrumb + noindex coverage, `AdminPageGroupsTest`.
-- [ ] **4. Page fields + visibility semantics** — migration adds
-      `is_published`, `show_in_menu`, `priority`, `page_group_id`;
+- [x] **4. Page fields + visibility semantics** — migration adds
+      `is_draft`, `show_in_menu`, `priority`, `page_group_id`;
       `Page::isVisible()`/`visible()` replace `published()`; the
       cross-table slug rule (pages ↔ groups) + reserved root slugs from
       the route table; `published_at` required when published + grouped; admin form

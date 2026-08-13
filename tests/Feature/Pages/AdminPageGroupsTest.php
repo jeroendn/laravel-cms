@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Pages;
 
+use App\Models\Page;
 use App\Models\PageGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -143,6 +144,41 @@ class AdminPageGroupsTest extends TestCase
         $response->assertSessionHasErrors('slug');
     }
 
+    public function testTheSlugMayNotCollideWithAPageSlug(): void
+    {
+        Page::factory()->create(['slug' => 'tips']);
+
+        $response = $this->actingAs($this->admin())->post(route('admin.page-groups.store'), [
+            'name' => 'Tips',
+            'slug' => 'tips',
+        ]);
+
+        $response->assertSessionHasErrors('slug');
+    }
+
+    public function testARootGroupMayNotUseAReservedSlug(): void
+    {
+        $response = $this->actingAs($this->admin())->post(route('admin.page-groups.store'), [
+            'name' => 'Admin',
+            'slug' => 'admin',
+        ]);
+
+        $response->assertSessionHasErrors('slug');
+    }
+
+    public function testASubgroupMayReuseAReservedSlug(): void
+    {
+        $parent = PageGroup::factory()->create();
+
+        $this->actingAs($this->admin())->post(route('admin.page-groups.store'), [
+            'name' => 'Admin',
+            'slug' => 'admin',
+            'parent_id' => (string) $parent->id,
+        ]);
+
+        $this->assertDatabaseHas('page_groups', ['slug' => 'admin', 'parent_id' => $parent->id]);
+    }
+
     public function testAdminCanUpdateAGroup(): void
     {
         $group = PageGroup::factory()->create();
@@ -183,6 +219,19 @@ class AdminPageGroupsTest extends TestCase
 
         $response->assertSee(__('Cannot delete :name: it still contains pages or subgroups.', ['name' => 'Occupied']));
         $response->assertSee('text-bg-danger');
+        $this->assertDatabaseHas('page_groups', ['id' => $group->id]);
+    }
+
+    public function testAGroupWithPagesCannotBeDeleted(): void
+    {
+        $group = PageGroup::factory()->create(['name' => 'Filled']);
+        Page::factory()->create(['page_group_id' => $group->id]);
+
+        $response = $this->actingAs($this->admin())
+            ->followingRedirects()
+            ->delete(route('admin.page-groups.destroy', $group));
+
+        $response->assertSee(__('Cannot delete :name: it still contains pages or subgroups.', ['name' => 'Filled']));
         $this->assertDatabaseHas('page_groups', ['id' => $group->id]);
     }
 

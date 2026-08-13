@@ -26,7 +26,7 @@ class UnderConstructionTest extends TestCase
 
     public function testThePublicPagesAreUnaffectedOutsideProduction(): void
     {
-        Page::factory()->published()->create(['title' => 'Magnesium and sleep']);
+        Page::factory()->visible()->create(['title' => 'Magnesium and sleep']);
 
         $response = $this->get(route('home'));
 
@@ -37,7 +37,7 @@ class UnderConstructionTest extends TestCase
     #[DataProvider('publicRoutes')]
     public function testAGuestOnlySeesThePlaceholderOnProduction(string $route): void
     {
-        $page = Page::factory()->published()->create(['title' => 'Magnesium and sleep']);
+        $page = Page::factory()->visible()->create(['title' => 'Magnesium and sleep']);
         $this->runningOnProduction();
 
         $response = $this->get(route($route, $route === 'pages.show' ? $page : []));
@@ -50,7 +50,7 @@ class UnderConstructionTest extends TestCase
 
     public function testAnAuthenticatedUserStillSeesTheRealSite(): void
     {
-        Page::factory()->published()->create(['title' => 'Magnesium and sleep']);
+        Page::factory()->visible()->create(['title' => 'Magnesium and sleep']);
         $this->runningOnProduction();
 
         $response = $this->actingAs(User::factory()->create())->get(route('home'));

@@ -68,7 +68,7 @@ class SearchIndexingTest extends TestCase
 
     public function testThePublicPagesStayIndexable(): void
     {
-        $page = Page::factory()->published()->create();
+        $page = Page::factory()->visible()->create();
 
         foreach ([route('home'), route('pages.index'), route('pages.show', $page)] as $url) {
             $response = $this->get($url);

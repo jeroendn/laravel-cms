@@ -5,9 +5,11 @@ namespace App\Http\Requests;
 use Closure;
 use Override;
 use App\Models\PageGroup;
+use App\Rules\NotAReservedSlug;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 
 class StorePageGroupRequest extends FormRequest
 {
@@ -41,9 +43,18 @@ class StorePageGroupRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Pages and groups share the URL namespace, so a slug must be free
+        // in both tables. A root group's slug becomes a first URL segment
+        // and must not shadow an application route.
+        $slugRules = ['required', 'string', 'max:255', $this->uniqueSlugRule(), 'unique:pages,slug'];
+
+        if (!$this->filled('parent_id')) {
+            $slugRules[] = new NotAReservedSlug();
+        }
+
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:page_groups,slug'],
+            'slug' => $slugRules,
             'show_in_menu' => ['boolean'],
             'priority' => ['nullable', 'integer'],
             'parent_id' => [
@@ -70,5 +81,10 @@ class StorePageGroupRequest extends FormRequest
         if (!$parent->isRoot()) {
             $fail(__('The parent group is itself a subgroup; only one level of nesting is allowed.'));
         }
+    }
+
+    protected function uniqueSlugRule(): Unique
+    {
+        return Rule::unique('page_groups', 'slug');
     }
 }

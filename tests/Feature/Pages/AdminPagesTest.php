@@ -3,6 +3,7 @@
 namespace Tests\Feature\Pages;
 
 use App\Models\Page;
+use App\Models\PageGroup;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -23,26 +24,34 @@ class AdminPagesTest extends TestCase
         $this->delete(route('admin.pages.destroy', $page))->assertRedirect(route('login'));
     }
 
-    public function testIndexListsAllPagesIncludingDrafts(): void
+    public function testIndexListsAllPagesWithTheirGroup(): void
     {
-        Page::factory()->published()->create(['title' => 'Published page']);
-        Page::factory()->create(['title' => 'Draft page']);
+        $group = PageGroup::factory()->create(['name' => 'Health']);
+        Page::factory()->visible()->create(['title' => 'Published page']);
+        Page::factory()->create(['title' => 'Draft page', 'page_group_id' => $group->id]);
 
         $response = $this->actingAs($this->admin())->get(route('admin.pages.index'));
 
         $response->assertOk();
         $response->assertSee('Published page');
         $response->assertSee('Draft page');
+        $response->assertSee('Health');
     }
 
     public function testAdminCanViewTheCreateAndEditForms(): void
     {
+        $parent = PageGroup::factory()->create(['name' => 'Health']);
+        PageGroup::factory()->create(['name' => 'Sleep', 'parent_id' => $parent->id]);
         $page = Page::factory()->create(['title' => 'Existing page']);
         $admin = $this->admin();
 
         $create = $this->actingAs($admin)->get(route('admin.pages.create'));
         $create->assertOk();
         $create->assertSee('body-editor');
+        // The group select labels a subgroup with its parent's name.
+        $create->assertSee('Health / Sleep');
+        // A new page starts as a draft: the toggle is checked by default.
+        $this->assertMatchesRegularExpression('/name="is_draft" value="1"\s+checked/', (string) $create->getContent());
 
         $edit = $this->actingAs($admin)->get(route('admin.pages.edit', $page));
         $edit->assertOk();
@@ -55,12 +64,17 @@ class AdminPagesTest extends TestCase
             'title' => 'Magnesium and Sports',
             'slug' => '',
             'body' => '<p>Content</p>',
+            'is_draft' => '1',
         ]);
 
         $response->assertRedirect(route('admin.pages.index'));
         $this->assertDatabaseHas('pages', [
             'title' => 'Magnesium and Sports',
             'slug' => 'magnesium-and-sports',
+            'is_draft' => true,
+            'show_in_menu' => false,
+            'priority' => 0,
+            'page_group_id' => null,
             'published_at' => null,
         ]);
     }
@@ -78,24 +92,25 @@ class AdminPagesTest extends TestCase
         $response->assertSee('data-bs-autohide="false"', false);
     }
 
-    public function testAdminCanCreatePublishedPage(): void
+    public function testAnUngroupedPageIsVisibleWithoutAPublicationDate(): void
     {
+        // No is_draft in the payload: an unchecked toggle publishes the page.
         $this->actingAs($this->admin())->post(route('admin.pages.store'), [
             'title' => 'Instantly live',
             'slug' => '',
             'body' => '<p>Content</p>',
-            'published_at' => now()->format('Y-m-d'),
         ]);
 
         $page = Page::query()->firstOrFail();
 
-        $this->assertTrue($page->isPublished());
+        $this->assertTrue($page->isVisible());
+        $this->assertNull($page->published_at);
     }
 
-    public function testAdminCanScheduleAPage(): void
+    public function testAnUngroupedPageIgnoresTheSubmittedPublicationDate(): void
     {
         $this->actingAs($this->admin())->post(route('admin.pages.store'), [
-            'title' => 'Coming up',
+            'title' => 'Dateless',
             'slug' => '',
             'body' => '<p>Content</p>',
             'published_at' => now()->addWeek()->format('Y-m-d'),
@@ -103,15 +118,93 @@ class AdminPagesTest extends TestCase
 
         $page = Page::query()->firstOrFail();
 
+        $this->assertNull($page->published_at);
+        $this->assertTrue($page->isVisible());
+    }
+
+    public function testAdminCanCreateAPageInAGroup(): void
+    {
+        $group = PageGroup::factory()->create();
+
+        $this->actingAs($this->admin())->post(route('admin.pages.store'), [
+            'title' => 'Grouped',
+            'slug' => '',
+            'body' => '<p>Content</p>',
+            'page_group_id' => (string) $group->id,
+            'published_at' => now()->format('Y-m-d'),
+            'show_in_menu' => '1',
+            'priority' => '5',
+        ]);
+
+        $this->assertDatabaseHas('pages', [
+            'title' => 'Grouped',
+            'page_group_id' => $group->id,
+            'is_draft' => false,
+            'show_in_menu' => true,
+            'priority' => 5,
+        ]);
+    }
+
+    public function testAGroupedPublishedPageRequiresAPublicationDate(): void
+    {
+        $group = PageGroup::factory()->create();
+
+        $response = $this->actingAs($this->admin())->post(route('admin.pages.store'), [
+            'title' => 'No date',
+            'slug' => '',
+            'body' => '<p>Content</p>',
+            'page_group_id' => (string) $group->id,
+        ]);
+
+        $response->assertSessionHasErrors('published_at');
+    }
+
+    public function testAGroupedDraftNeedsNoPublicationDate(): void
+    {
+        $group = PageGroup::factory()->create();
+
+        $this->actingAs($this->admin())->post(route('admin.pages.store'), [
+            'title' => 'Grouped draft',
+            'slug' => '',
+            'body' => '<p>Content</p>',
+            'page_group_id' => (string) $group->id,
+            'is_draft' => '1',
+        ]);
+
+        $this->assertDatabaseHas('pages', [
+            'title' => 'Grouped draft',
+            'is_draft' => true,
+            'published_at' => null,
+        ]);
+    }
+
+    public function testAdminCanScheduleAGroupedPage(): void
+    {
+        $group = PageGroup::factory()->create();
+
+        $this->actingAs($this->admin())->post(route('admin.pages.store'), [
+            'title' => 'Coming up',
+            'slug' => '',
+            'body' => '<p>Content</p>',
+            'page_group_id' => (string) $group->id,
+            'published_at' => now()->addWeek()->format('Y-m-d'),
+        ]);
+
+        $page = Page::query()->firstOrFail();
+
         $this->assertTrue($page->isScheduled());
-        $this->assertFalse($page->isPublished());
+        $this->assertFalse($page->isVisible());
     }
 
     public function testStatusBadgesDistinguishPublishedScheduledAndDraft(): void
     {
         app()->setLocale('en');
-        Page::factory()->published()->create();
-        Page::factory()->create(['published_at' => now()->addWeek()]);
+        $group = PageGroup::factory()->create();
+        Page::factory()->visible()->create();
+        Page::factory()->visible()->create([
+            'page_group_id' => $group->id,
+            'published_at' => now()->addWeek(),
+        ]);
         Page::factory()->create();
 
         $response = $this->actingAs($this->admin())->get(route('admin.pages.index'));
@@ -134,10 +227,65 @@ class AdminPagesTest extends TestCase
         $response->assertSessionHasErrors(['title', 'slug', 'body']);
     }
 
+    public function testThePageSlugMayNotCollideWithAGroupSlug(): void
+    {
+        PageGroup::factory()->create(['slug' => 'health']);
+
+        $response = $this->actingAs($this->admin())->post(route('admin.pages.store'), [
+            'title' => 'Health',
+            'slug' => 'health',
+            'body' => '<p>Content</p>',
+        ]);
+
+        $response->assertSessionHasErrors('slug');
+    }
+
+    public function testAnUngroupedPageMayNotUseAReservedSlug(): void
+    {
+        $response = $this->actingAs($this->admin())->post(route('admin.pages.store'), [
+            'title' => 'Admin',
+            'slug' => 'admin',
+            'body' => '<p>Content</p>',
+        ]);
+
+        $response->assertSessionHasErrors('slug');
+    }
+
+    public function testAGroupedPageMayReuseAReservedSlug(): void
+    {
+        $group = PageGroup::factory()->create();
+
+        $response = $this->actingAs($this->admin())->post(route('admin.pages.store'), [
+            'title' => 'Admin',
+            'slug' => 'admin',
+            'body' => '<p>Content</p>',
+            'page_group_id' => (string) $group->id,
+            'is_draft' => '1',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors('slug');
+        $this->assertDatabaseHas('pages', ['slug' => 'admin', 'page_group_id' => $group->id]);
+    }
+
+    public function testTheHomeSlugIsAllowedForPages(): void
+    {
+        $this->actingAs($this->admin())->post(route('admin.pages.store'), [
+            'title' => 'Home',
+            'slug' => 'home',
+            'body' => '<p>Content</p>',
+        ]);
+
+        $this->assertDatabaseHas('pages', ['slug' => 'home']);
+    }
+
     public function testAdminCanUpdateAPageKeepingThePublicationDate(): void
     {
+        $group = PageGroup::factory()->create();
         // Day precision: the form's date field carries no time.
-        $page = Page::factory()->published()->create(['published_at' => now()->subDay()->startOfDay()]);
+        $page = Page::factory()->visible()->create([
+            'page_group_id' => $group->id,
+            'published_at' => now()->subDay()->startOfDay(),
+        ]);
         $originallyPublishedAt = $page->published_at;
         $this->assertNotNull($originallyPublishedAt);
 
@@ -145,6 +293,7 @@ class AdminPagesTest extends TestCase
             'title' => 'New title',
             'slug' => $page->slug,
             'body' => '<p>New content</p>',
+            'page_group_id' => (string) $group->id,
             'published_at' => $originallyPublishedAt->format('Y-m-d'),
         ]);
 
@@ -155,18 +304,39 @@ class AdminPagesTest extends TestCase
         $this->assertTrue($page->published_at->equalTo($originallyPublishedAt));
     }
 
-    public function testAdminCanUnpublishAPage(): void
+    public function testAdminCanRevertAPageToDraft(): void
     {
-        $page = Page::factory()->published()->create();
+        $page = Page::factory()->visible()->create();
 
         $this->actingAs($this->admin())->put(route('admin.pages.update', $page), [
             'title' => $page->title,
             'slug' => $page->slug,
             'body' => $page->body,
-            'published_at' => '',
+            'is_draft' => '1',
         ]);
 
-        $this->assertNull($page->refresh()->published_at);
+        $this->assertTrue($page->refresh()->is_draft);
+    }
+
+    public function testRemovingTheGroupClearsThePublicationDate(): void
+    {
+        $group = PageGroup::factory()->create();
+        $page = Page::factory()->visible()->create([
+            'page_group_id' => $group->id,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($this->admin())->put(route('admin.pages.update', $page), [
+            'title' => $page->title,
+            'slug' => $page->slug,
+            'body' => $page->body,
+            'page_group_id' => '',
+            'published_at' => now()->subDay()->format('Y-m-d'),
+        ]);
+
+        $page->refresh();
+        $this->assertNull($page->page_group_id);
+        $this->assertNull($page->published_at);
     }
 
     public function testAdminCanDeleteAPage(): void
@@ -179,14 +349,14 @@ class AdminPagesTest extends TestCase
         $this->assertDatabaseMissing('pages', ['id' => $page->id]);
     }
 
-    public function testOnlyPublishedPagesGetALinkToTheirPublicPage(): void
+    public function testOnlyVisiblePagesGetALinkToTheirPublicPage(): void
     {
-        $published = Page::factory()->published()->create();
+        $visible = Page::factory()->visible()->create();
         $draft = Page::factory()->create();
 
         $response = $this->actingAs($this->admin())->get(route('admin.pages.index'));
 
-        $response->assertSee(route('pages.show', $published));
+        $response->assertSee(route('pages.show', $visible));
         $response->assertDontSee(route('pages.show', $draft));
     }
 

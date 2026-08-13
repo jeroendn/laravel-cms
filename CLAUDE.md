@@ -181,6 +181,9 @@ the front door**: it auto-detects context and forwards dev commands into
   goes through Bootstrap/Tabler classes in the Blade templates, and only
   what those cannot express belongs in `app.css` (the Quill overrides, the
   admin frame and the toast countdown bar). Customization happens through the `--tblr-*` custom properties.
+  Required fields mark their label with Tabler's `required` class (red
+  asterisk), the auth views included; a conditionally required field
+  toggles it client-side (the publication date, see §6).
 - **Tabler's own JS bundle is not used** — it only carries widgets we do not
   have (autosize, theme switcher). `app.js` imports `bootstrap/js/dist/collapse`,
   `.../dropdown` and `.../toast` instead; importing them registers their
@@ -406,10 +409,27 @@ recreated as `pages`, no data migration). The public URLs deliberately
 still say `/blog` until the dynamic URL step of the rebuild lands.
 
 - **Model `Page`**: `title`, `slug` (unique, public URL key), `body`
-  (HTML from the editor), `published_at` (null = draft, future =
-  scheduled). `Page::published()` is the public query; `isPublished()`
-  and `isScheduled()` the per-model checks.
-- **Public**: `/` teases the `PageController::RECENT` newest published
+  (HTML from the editor), `is_draft` toggle (default on, so a new page
+  stays hidden; shown in the form as a "Draft"/"Concept" switch),
+  `show_in_menu` toggle, `priority` (int default 0), nullable
+  `page_group_id` (FK, `restrictOnDelete`) and `published_at`.
+  **The date only means something for grouped pages**: grouped +
+  published requires one, and a future date keeps the page hidden until
+  then ("scheduled"). Ungrouped pages ignore the date entirely — the
+  requests null it on save, so it cannot linger when a page leaves its
+  group. `Page::visible()` is the public query, `isVisible()` /
+  `isScheduled()` the per-model checks; `isScheduled()` is by definition
+  only ever true for a grouped page.
+- **Slugs share one URL namespace**: DB-unique per table, plus a
+  cross-table rule in the requests (pages and groups may never share a
+  slug — no DB constraint spans two tables). Root-level slugs (ungrouped
+  pages, root groups) also must not shadow an application route:
+  `App\Rules\NotAReservedSlug` derives the reserved list from the route
+  table (literal first path segments), so new app routes are covered
+  automatically. `home` is excepted for pages — that slug becomes the
+  home page and is served by the application itself at `/`. Grouped
+  pages and subgroups never occupy a first URL segment and skip the rule.
+- **Public**: `/` teases the `PageController::RECENT` newest visible
   pages and links on to `/blog`, the full archive (newest first,
   `simplePaginate(10)`); `/blog/{slug}` shows one page. Drafts and
   scheduled pages appear in none of the three. Both lists render the same
@@ -419,24 +439,25 @@ still say `/blog` until the dynamic URL step of the rebuild lands.
   `admin/pages/_form.blade.php`. The slug is generated from the title
   when left empty (`StorePageRequest::prepareForValidation`);
   `published_at` is a date field, stored as midnight — day precision is
-  enough for this site (decided 2026-08-08); empty = draft, future =
-  scheduled, and the field is prefilled on edit, so re-saving keeps the
-  original publish date. The overview shows the status as a badge:
-  green "Published", yellow "Scheduled", grey "Draft".
+  enough for this site (decided 2026-08-08) — prefilled on edit, so
+  re-saving keeps the original publish date. `app.js` hides the date
+  block while no group is selected and mirrors the draft toggle in the
+  date label's `required` asterisk (both cosmetic only — the server
+  nulls the date for ungrouped pages and validates regardless). The
+  group select lists subgroups
+  as "Parent / Child" (`PageGroup::fullName()`). The overview shows each
+  page's group and its status as a badge: green "Published", yellow
+  "Scheduled", grey "Draft".
 - **Page groups** (`PageGroup`): `name`, `slug`, `show_in_menu`,
   `priority` (default 0 — higher will sort further left in the menu, ties
   alphabetically) and a nullable `parent_id`, **max one level deep**: the
   form only offers root groups as parent and the requests reject a
   non-root parent, a parent for a group that has children, and
   self-parenting. Admin CRUD at `/admin/page-groups` mirrors the
-  pages/users style. Slugs are **DB-unique per table** (decided
-  2026-08-13); the extra cross-table requirement — pages and groups may
-  never share a slug — lands with the page fields step as a validation
-  rule, since no DB constraint spans two tables. Deleting a group that still has subgroups
-  is refused with the red error toast (and `restrictOnDelete` as
-  backstop); pages will join that guard when they get a `page_group_id`.
-  Groups do nothing publicly yet — menu and URLs come later in the
-  rebuild (`docs/plan-paginas.md`).
+  pages/users style. Deleting a group that still has subgroups or pages
+  is refused with the red error toast (and `restrictOnDelete` on both
+  FKs as backstop). Groups do nothing publicly yet — menu and URLs come
+  later in the rebuild (`docs/plan-paginas.md`).
 - **Editor**: **Quill 2** (npm dependency, BSD-3). Deliberately NOT Trix:
   Trix 2.1.x never gets keyboard input into its document model (text shows
   in the DOM but nothing is saved) — reproduced with both its ESM and UMD

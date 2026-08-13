@@ -16,7 +16,7 @@ class BreadcrumbsTest extends TestCase
 
     public function testThePagePageSitsBehindTheHomeIconAndTheArchive(): void
     {
-        $page = Page::factory()->published()->create(['title' => 'A published page']);
+        $page = Page::factory()->visible()->create(['title' => 'A published page']);
 
         $trail = $this->trail($this->get(route('pages.show', $page)));
 

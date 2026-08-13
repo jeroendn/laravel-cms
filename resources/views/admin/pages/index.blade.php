@@ -23,6 +23,7 @@
                     <thead>
                         <tr>
                             <th scope="col">{{ __('Title') }}</th>
+                            <th scope="col">{{ __('Page group') }}</th>
                             <th scope="col">{{ __('Status') }}</th>
                             <th scope="col">{{ __('Date') }}</th>
                             <th scope="col" class="w-1 text-end">{{ __('Actions') }}</th>
@@ -32,8 +33,9 @@
                         @foreach ($pages as $page)
                             <tr>
                                 <td><a href="{{ route('admin.pages.edit', $page) }}">{{ $page->title }}</a></td>
+                                <td class="text-secondary">{{ $page->group?->fullName() }}</td>
                                 <td>
-                                    @if ($page->isPublished())
+                                    @if ($page->isVisible())
                                         <span class="badge bg-green-lt">{{ __('Published') }}</span>
                                     @elseif ($page->isScheduled())
                                         <span class="badge bg-yellow-lt">{{ __('Scheduled') }}</span>
@@ -50,7 +52,7 @@
                                 </td>
                                 <td>
                                     <div class="btn-list flex-nowrap justify-content-end">
-                                        @if ($page->isPublished())
+                                        @if ($page->isVisible())
                                             <a href="{{ route('pages.show', $page) }}" class="btn btn-sm"
                                                target="_blank" rel="noopener"
                                                title="{{ __('View') }}" aria-label="{{ __('View') }}">

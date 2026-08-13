@@ -24,6 +24,25 @@ if (resetLink && resetLinkCopy) {
     });
 }
 
+// A publication date only applies to grouped pages, and is required once
+// the page is no longer a draft — so the block follows the group select
+// and the label's asterisk follows the draft toggle. Cosmetic only; the
+// server nulls the date for ungrouped pages and validates regardless.
+const groupSelect = document.getElementById('page_group_id');
+const publishedAtField = document.getElementById('published-at-field');
+const draftToggle = document.querySelector('input[name="is_draft"]');
+
+if (groupSelect && publishedAtField && draftToggle) {
+    const dateLabel = publishedAtField.querySelector('.form-label');
+    const sync = () => {
+        publishedAtField.classList.toggle('d-none', groupSelect.value === '');
+        dateLabel.classList.toggle('required', !draftToggle.checked);
+    };
+    groupSelect.addEventListener('change', sync);
+    draftToggle.addEventListener('change', sync);
+    sync();
+}
+
 // WYSIWYG editor for the admin page form. The toolbar is icon-only, so it
 // involves no translatable copy.
 const editorElement = document.getElementById('body-editor');

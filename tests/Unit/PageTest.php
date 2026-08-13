@@ -38,26 +38,59 @@ class PageTest extends TestCase
         $this->assertSame('Safe content', $page->excerpt());
     }
 
-    public function testIsPublishedIsFalseForADraft(): void
+    public function testADraftIsNeverVisible(): void
     {
-        $page = new Page(['published_at' => null]);
+        $page = new Page(['is_draft' => true]);
 
-        $this->assertFalse($page->isPublished());
+        $this->assertFalse($page->isVisible());
     }
 
-    public function testIsPublishedIsFalseForAScheduledPage(): void
+    public function testAnUngroupedPublishedPageIsVisibleWithoutADate(): void
     {
-        $page = new Page(['published_at' => now()->addMinute()]);
+        $page = new Page(['is_draft' => false]);
 
-        $this->assertFalse($page->isPublished());
+        $this->assertTrue($page->isVisible());
     }
 
-    public function testIsPublishedIsTrueAtTheExactPublicationMoment(): void
+    public function testAnUngroupedPageIgnoresAFutureDate(): void
+    {
+        $page = new Page(['is_draft' => false, 'published_at' => now()->addDay()]);
+
+        $this->assertTrue($page->isVisible());
+        $this->assertFalse($page->isScheduled());
+    }
+
+    public function testAGroupedPageWithoutADateIsNotVisible(): void
+    {
+        $page = new Page(['is_draft' => false, 'page_group_id' => 1]);
+
+        $this->assertFalse($page->isVisible());
+        $this->assertFalse($page->isScheduled());
+    }
+
+    public function testAGroupedPageWithAFutureDateIsScheduledNotVisible(): void
+    {
+        $page = new Page([
+            'is_draft' => false,
+            'page_group_id' => 1,
+            'published_at' => now()->addMinute(),
+        ]);
+
+        $this->assertFalse($page->isVisible());
+        $this->assertTrue($page->isScheduled());
+    }
+
+    public function testAGroupedPageIsVisibleAtTheExactPublicationMoment(): void
     {
         $this->freezeTime();
 
-        $page = new Page(['published_at' => now()]);
+        $page = new Page([
+            'is_draft' => false,
+            'page_group_id' => 1,
+            'published_at' => now(),
+        ]);
 
-        $this->assertTrue($page->isPublished());
+        $this->assertTrue($page->isVisible());
+        $this->assertFalse($page->isScheduled());
     }
 }

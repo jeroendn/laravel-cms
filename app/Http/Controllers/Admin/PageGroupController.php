@@ -63,7 +63,7 @@ class PageGroupController extends Controller
 
     public function destroy(PageGroup $pageGroup): RedirectResponse
     {
-        if ($pageGroup->children()->exists()) {
+        if ($pageGroup->children()->exists() || $pageGroup->pages()->exists()) {
             return redirect()
                 ->route('admin.page-groups.index')
                 ->with('error', __('Cannot delete :name: it still contains pages or subgroups.', ['name' => $pageGroup->name]));

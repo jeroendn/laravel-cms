@@ -15,7 +15,7 @@ class PageController extends Controller
     public function home(): View
     {
         return view('home', [
-            'pages' => Page::published()
+            'pages' => Page::visible()
                 ->latest('published_at')
                 ->take(self::RECENT)
                 ->get(),
@@ -25,7 +25,7 @@ class PageController extends Controller
     public function index(): View
     {
         return view('pages.index', [
-            'pages' => Page::published()
+            'pages' => Page::visible()
                 ->latest('published_at')
                 ->simplePaginate(10),
         ]);
@@ -33,7 +33,7 @@ class PageController extends Controller
 
     public function show(Page $page): View
     {
-        abort_unless($page->isPublished(), 404);
+        abort_unless($page->isVisible(), 404);
 
         return view('pages.show', ['page' => $page]);
     }

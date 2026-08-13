@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read PageGroup|null $parent
  * @property-read Collection<int, PageGroup> $children
+ * @property-read Collection<int, Page> $pages
  */
 #[Fillable(['name', 'slug', 'show_in_menu', 'priority', 'parent_id'])]
 class PageGroup extends Model
@@ -60,8 +61,25 @@ class PageGroup extends Model
         return $this->hasMany(self::class, 'parent_id');
     }
 
+    /**
+     * @return HasMany<Page, $this>
+     */
+    public function pages(): HasMany
+    {
+        return $this->hasMany(Page::class);
+    }
+
     public function isRoot(): bool
     {
         return $this->parent_id === null;
+    }
+
+    /**
+     * The name prefixed with the parent's, to tell subgroups apart in
+     * flat listings (the group select, the admin index).
+     */
+    public function fullName(): string
+    {
+        return $this->parent === null ? $this->name : $this->parent->name . ' / ' . $this->name;
     }
 }
