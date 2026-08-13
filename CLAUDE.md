@@ -17,7 +17,7 @@ This file is loaded automatically as context.
 > cases and gotchas belong here — do not restate them there. When in doubt,
 > leave the README alone.
 >
-> Last updated: 2026-08-08
+> Last updated: 2026-08-13
 
 ---
 
@@ -520,6 +520,9 @@ is green.
 Only open work lives here. **Finished items are deleted from this list, not
 ticked off** — what exists is described in the sections above.
 
+- **Pages rebuild in progress**: the blog becomes a generic page system
+      with page groups, a dynamic menu and dynamic URLs. Roadmap and
+      decisions: `docs/plan-paginas.md` (one commit per checklist item).
 - Remove the under-construction placeholder when the site goes live:
       it is tied to `APP_ENV=production` and will not lift by itself
       (see §2).
