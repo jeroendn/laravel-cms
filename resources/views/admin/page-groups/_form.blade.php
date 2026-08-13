@@ -16,13 +16,14 @@
     <label class="form-label" for="slug">{{ __('Slug') }}</label>
     <input id="slug" type="text" name="slug" value="{{ old('slug', $group?->slug) }}"
            class="form-control @error('slug') is-invalid @enderror"
-           aria-describedby="slug-help">
+           aria-describedby="slug-help url-preview">
     @error('slug')
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
     <small id="slug-help" class="form-hint">
         {{ __('Leave empty to generate the slug from the name.') }}
     </small>
+    @include('partials.url-preview', ['source' => 'name', 'parent' => 'parent_id', 'homeSlug' => ''])
 </div>
 
 <div class="mb-3">
@@ -32,7 +33,7 @@
             aria-describedby="parent-help">
         <option value="">{{ __('None') }}</option>
         @foreach ($parents as $parent)
-            <option value="{{ $parent->id }}"
+            <option value="{{ $parent->id }}" data-path="{{ $parent->path() }}"
                     @selected(old('parent_id', (string) $group?->parent_id) === (string) $parent->id)>
                 {{ $parent->name }}
             </option>

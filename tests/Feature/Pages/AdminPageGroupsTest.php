@@ -50,6 +50,18 @@ class AdminPageGroupsTest extends TestCase
         $edit->assertSee('Existing group');
     }
 
+    public function testTheFormCarriesTheDataForTheLiveUrlPreview(): void
+    {
+        PageGroup::factory()->create(['slug' => 'health']);
+
+        $response = $this->actingAs($this->admin())->get(route('admin.page-groups.create'));
+
+        $response->assertSee('id="url-preview"', false);
+        $response->assertSee('data-path="health"', false);
+        // Only a page can end up at the site root, never a group.
+        $response->assertSee('data-home-slug=""', false);
+    }
+
     public function testAdminCanCreateAGroupWithGeneratedSlug(): void
     {
         $response = $this->actingAs($this->admin())->post(route('admin.page-groups.store'), [
