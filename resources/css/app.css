@@ -22,7 +22,7 @@
     --tblr-primary-fg: var(--tblr-gray-900);
 }
 
-/* Quill (admin post form) ships its own complete styling; these are the only
+/* Quill (admin page form) ships its own complete styling; these are the only
    places it does not survive contact with Tabler.
 
    The surface has to stay light in dark mode: Quill's toolbar icons are

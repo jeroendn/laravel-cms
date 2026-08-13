@@ -24,11 +24,11 @@ This file is loaded automatically as context.
 ## 1. What this is
 
 A **website** for a client, built with Laravel and styled with
-**Tabler** (Bootstrap 5). The content system (**pages**, formerly the
-blog — public archive + admin CRUD, being rebuilt into a generic page
-system per `docs/plan-paginas.md`), authentication, user management and
-the Dutch localization are in place; §9 lists what is not. Until the
-client goes live the public side is hidden behind a placeholder — see §2.
+**Tabler** (Bootstrap 5). The content system (**pages** with page
+groups, dynamic URLs and a dynamic menu — admin CRUD included, see §6),
+authentication, user management and the Dutch localization are in
+place; §9 lists what is not. Until the client goes live the public side
+is hidden behind a placeholder — see §2.
 
 ## 2. Architecture & environment
 
@@ -217,10 +217,10 @@ the front door**: it auto-detects context and forwards dev commands into
   shows none** (decided 2026-08-07). Vite also strips Font Awesome's license
   banner when it minifies, so nothing credits it anywhere. If that ever needs
   to change, keeping the banner in the build is cheaper than a visible line.
-- **Dark mode**: Pico switched on `prefers-color-scheme`, Tabler themes on
-  `[data-bs-theme]`. The layout sets that attribute from the OS preference in
-  an inline `<head>` script, before the stylesheet loads, so the behaviour is
-  unchanged and there is no flash of the wrong theme.
+- **Dark mode**: Tabler themes on `[data-bs-theme]`. The layout sets that
+  attribute from the OS preference in an inline `<head>` script, before
+  the stylesheet loads, so the theme follows the OS without a flash of
+  the wrong theme.
 - Blade: `resources/views/layouts/app.blade.php` is the base layout; pages
   extend it (`resources/views/home.blade.php`). Its `<head>` contents live
   in `partials/head.blade.php`, shared with the standalone
@@ -311,10 +311,10 @@ the front door**: it auto-detects context and forwards dev commands into
   confirmation, which takes the record's own title. A third entity type
   then costs one key, not six.
 - Not everything can be shared: **`New :name` translates to "Nieuwe :name"**
-  and Dutch adjectives inflect on gender — a het-word noun breaks it (the
-  former `post` → "artikel" would have produced "Nieuwe artikel" instead of
-  "Nieuw artikel"). `New page` and `New user` therefore stay separate keys —
-  check the Dutch reads before folding a string into a template.
+  and Dutch adjectives inflect on gender — a het-word noun breaks it
+  ("artikel" would produce "Nieuwe artikel" instead of "Nieuw artikel").
+  `New page` and `New user` therefore stay separate keys — check the
+  Dutch reads before folding a string into a template.
 - **laravel-lang/common** is a regular dev dependency (a sub-dependency
   needs `ext-bcmath`, which the Dockerfile installs for this reason).
   Day-to-day translations never touch it — new app strings are added to
@@ -429,10 +429,6 @@ the front door**: it auto-detects context and forwards dev commands into
 
 ## 6. Pages
 
-Formerly the blog; rebuilt into a generic page system per
-`docs/plan-paginas.md` (the empty `posts` table was dropped and recreated
-as `pages`, no data migration; `/blog` is gone).
-
 - **Model `Page`**: `title`, `slug` (unique, public URL key), `body`
   (HTML from the editor), `is_draft` toggle (default on, so a new page
   stays hidden; shown in the form as a "Draft"/"Concept" switch),
@@ -489,7 +485,7 @@ as `pages`, no data migration; `/blog` is gone).
   page's group and its status as a badge: green "Published", yellow
   "Scheduled", grey "Draft".
 - **Page groups** (`PageGroup`): `name`, `slug`, `show_in_menu`,
-  `priority` (default 0 — higher will sort further left in the menu, ties
+  `priority` (default 0 — higher sorts further left in the menu, ties
   alphabetically) and a nullable `parent_id`, **max one level deep**: the
   form only offers root groups as parent and the requests reject a
   non-root parent, a parent for a group that has children, and
@@ -506,9 +502,8 @@ as `pages`, no data migration; `/blog` is gone).
   translate. `app.js` seeds Quill from the hidden `body` input and syncs
   back on change/submit via `getSemanticHTML()` (with an `&nbsp;`
   workaround for quill#4509). Quill ships its own complete styling; the five
-  rules in `app.css` are all that is left (measured 2026-08-07 by deleting
-  each one in the browser — one more, `color: inherit` on the editor's block
-  elements, was a Pico artefact and had no effect under Tabler):
+  rules in `app.css` are all it needs (measured 2026-08-07 by deleting
+  each one in the browser):
   a `min-height` (without it the editor collapses to 42px, since Quill sets
   `height: 100%` on an auto-height parent), a light surface (`#fff` plus
   Quill's own `#444` text), Tabler's border radius (two rules — the toolbar
@@ -609,9 +604,6 @@ is green.
 Only open work lives here. **Finished items are deleted from this list, not
 ticked off** — what exists is described in the sections above.
 
-- **Pages rebuild in progress**: the blog becomes a generic page system
-      with page groups, a dynamic menu and dynamic URLs. Roadmap and
-      decisions: `docs/plan-paginas.md` (one commit per checklist item).
 - Remove the under-construction placeholder when the site goes live:
       it is tied to `APP_ENV=production` and will not lift by itself
       (see §2).
