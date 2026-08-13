@@ -43,7 +43,7 @@ class NavigationTest extends TestCase
     {
         $response = $this->actingAs(User::factory()->create())->get(route('admin.dashboard'));
 
-        $response->assertSee('href="' . route('admin.posts.index') . '"', false);
+        $response->assertSee('href="' . route('admin.pages.index') . '"', false);
         $response->assertSee('href="' . route('admin.users.index') . '"', false);
     }
 }

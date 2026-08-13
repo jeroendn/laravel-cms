@@ -1,6 +1,6 @@
 # Magnesium en gezondheid website
 
-Blog website, built with [Laravel](https://laravel.com) and
+Client website with page management, built with [Laravel](https://laravel.com) and
 [Tabler](https://tabler.io). How the app works in detail is specified in
 `CLAUDE.md`; this file is the practical front door.
 
@@ -40,10 +40,11 @@ imported Caddyfile.
 
 ## The app
 
-Public: `/` teases the newest posts, `/blog` is the full archive and
-`/blog/{slug}` a single post; drafts stay hidden. The admin area starts at
-`/admin`, with the posts under `/admin/posts` and the accounts under
-`/admin/users`.
+Public: `/` teases the newest pages, `/blog` is the full archive and
+`/blog/{slug}` a single page; drafts stay hidden. (The `/blog` URLs are
+temporary — the pages rebuild replaces them with dynamic URLs, see
+`docs/plan-paginas.md`.) The admin area starts at `/admin`, with the pages
+under `/admin/pages` and the accounts under `/admin/users`.
 
 Login is at `/login`; registration is disabled and the public site shows
 no login link. The migrations bootstrap an admin account

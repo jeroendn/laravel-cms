@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Models\Post;
+use App\Models\Page;
 use Illuminate\Routing\Route;
 
 class Breadcrumbs
@@ -23,9 +23,9 @@ class Breadcrumbs
         }
 
         return match ($route->getName()) {
-            'posts.index' => [self::crumb(__('Posts'))],
-            'posts.show' => self::post($route),
-            'admin.posts.index' => [self::crumb(__('Posts'))],
+            'pages.index' => [self::crumb(__('Pages'))],
+            'pages.show' => self::page($route),
+            'admin.pages.index' => [self::crumb(__('Pages'))],
             'admin.users.index' => [self::crumb(__('Users'))],
             default => [],
         };
@@ -39,17 +39,17 @@ class Breadcrumbs
     /**
      * @return list<array{label: string, url: string|null}>
      */
-    private static function post(Route $route): array
+    private static function page(Route $route): array
     {
-        $post = $route->parameter('post');
+        $page = $route->parameter('page');
 
-        if (!$post instanceof Post) {
+        if (!$page instanceof Page) {
             return [];
         }
 
         return [
-            self::crumb(__('Posts'), route('posts.index')),
-            self::crumb($post->title),
+            self::crumb(__('Pages'), route('pages.index')),
+            self::crumb($page->title),
         ];
     }
 

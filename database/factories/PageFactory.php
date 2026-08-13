@@ -2,14 +2,14 @@
 
 namespace Database\Factories;
 
-use App\Models\Post;
+use App\Models\Page;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<Post>
+ * @extends Factory<Page>
  */
-class PostFactory extends Factory
+class PageFactory extends Factory
 {
     /**
      * Define the model's default state: a draft.
@@ -29,7 +29,7 @@ class PostFactory extends Factory
     }
 
     /**
-     * Indicate that the post is publicly visible.
+     * Indicate that the page is publicly visible.
      */
     public function published(): static
     {

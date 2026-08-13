@@ -29,7 +29,7 @@ class ActivityTrackingTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get(route('posts.index'));
+        $this->actingAs($user)->get(route('pages.index'));
 
         $this->assertNotNull($user->refresh()->last_active_at);
     }

@@ -1,6 +1,6 @@
 # CLAUDE.md — Magnesium
 
-Technical specification & working agreements for the Magnesium blog website.
+Technical specification & working agreements for the Magnesium website.
 This file is loaded automatically as context.
 
 > ## ⚠️ Maintenance rule (hard, always applies)
@@ -23,11 +23,12 @@ This file is loaded automatically as context.
 
 ## 1. What this is
 
-A **blog website** for a client, built with Laravel and styled with
-**Tabler** (Bootstrap 5). The blog itself (public archive + admin CRUD),
-authentication, user management and the Dutch localization are in place;
-§9 lists what is not. Until the client goes live the public side is hidden
-behind a placeholder — see §2.
+A **website** for a client, built with Laravel and styled with
+**Tabler** (Bootstrap 5). The content system (**pages**, formerly the
+blog — public archive + admin CRUD, being rebuilt into a generic page
+system per `docs/plan-paginas.md`), authentication, user management and
+the Dutch localization are in place; §9 lists what is not. Until the
+client goes live the public side is hidden behind a placeholder — see §2.
 
 ## 2. Architecture & environment
 
@@ -227,9 +228,9 @@ the front door**: it auto-detects context and forwards dev commands into
   logout) appended for authenticated users. That partial is **last in the
   list on purpose**: `ms-md-auto` right-aligns it once the row is
   horizontal, and in the burger menu it lands at the bottom. `Home` and
-  `Posts` are real links; the two remaining dropdowns are **placeholder
+  `Pages` are real links; the two remaining dropdowns are **placeholder
   copy** with `href="#"`, waiting on the client's real site structure. The
-  admin menu is `Dashboard`, `Posts` and `Users`; the brand and the account
+  admin menu is `Dashboard`, `Pages` and `Users`; the brand and the account
   dropdown's "Administration" both lead to the dashboard, the admin area's
   own front page.
 - **Admin area is visually marked**: a fixed warning-coloured frame around
@@ -245,8 +246,8 @@ the front door**: it auto-detects context and forwards dev commands into
   create/edit forms stay in that group on purpose: they fill the layout's
   `@section('back')` instead, which sits in the same slot, so a page shows
   either a trail or a back link and never both. New routes get a `match`
-  arm; labels come from the bound model where there is one (`posts.show`).
-  A post detail page is `🏠 / Posts / <title>` — the "Posts" step only
+  arm; labels come from the bound model where there is one (`pages.show`).
+  A page detail page is `🏠 / Pages / <title>` — the "Pages" step only
   became meaningful once `/blog` existed; before that it would have pointed
   at the same page as the house. The house itself is not always `/`:
   `Breadcrumbs::homeUrl()` points it at the admin dashboard inside the admin
@@ -271,18 +272,18 @@ the front door**: it auto-detects context and forwards dev commands into
   writes `lang/en/*.php`, committed like the rest even though the keys
   are already English.
 - **Reuse laravel-lang's `:name` templates instead of writing one string
-  per entity.** `__('Edit :name', ['name' => __('post')])` renders
-  "Artikel bewerken" — `:Name` ucfirst's the replacement, so the noun goes
-  in as a lowercase key (`post` → `artikel`, `user` → `gebruiker`) and the
-  English fallback reads "Edit post". Same trick for the flash messages
+  per entity.** `__('Edit :name', ['name' => __('page')])` renders
+  "Pagina bewerken" — `:Name` ucfirst's the replacement, so the noun goes
+  in as a lowercase key (`page` → `pagina`, `user` → `gebruiker`) and the
+  English fallback reads "Edit page". Same trick for the flash messages
   (`:Name created.` / `:Name updated.` / `:Name deleted.`) and the delete
   confirmation, which takes the record's own title. A third entity type
   then costs one key, not six.
 - Not everything can be shared: **`New :name` translates to "Nieuwe :name"**
-  and Dutch adjectives inflect on gender, so it would produce "Nieuwe
-  artikel" instead of "Nieuw artikel". `New post` and `New user` therefore
-  stay separate keys — check the Dutch reads before folding a string into a
-  template.
+  and Dutch adjectives inflect on gender — a het-word noun breaks it (the
+  former `post` → "artikel" would have produced "Nieuwe artikel" instead of
+  "Nieuw artikel"). `New page` and `New user` therefore stay separate keys —
+  check the Dutch reads before folding a string into a template.
 - **laravel-lang/common** is a regular dev dependency (a sub-dependency
   needs `ext-bcmath`, which the Dockerfile installs for this reason).
   Day-to-day translations never touch it — new app strings are added to
@@ -296,7 +297,7 @@ the front door**: it auto-detects context and forwards dev commands into
 - **laravel/ui** (fleet standard, same as jeroendn-website):
   `Auth::routes()` in `routes/web.php` + controllers in
   `app/Http/Controllers/Auth/`. **Registration, e-mail verification and
-  password confirmation are disabled on purpose** (client blog — only
+  password confirmation are disabled on purpose** (client website — only
   admins log in); the unused controllers are deleted. Login/logout +
   password reset remain, with Tabler-styled views under
   `resources/views/auth/`. **The public site shows no login link** —
@@ -328,7 +329,7 @@ the front door**: it auto-detects context and forwards dev commands into
 ### User management
 
 - **Admin CRUD at `/admin/users`** (same auth middleware group as the
-  posts; every authenticated user is an admin, so anyone who logs in can
+  pages; every authenticated user is an admin, so anyone who logs in can
   add and remove accounts). Create/edit share `admin/users/_form.blade.php`
   and only carry name + e-mail.
 - **No password field anywhere.** `UserController::store()` saves a
@@ -346,7 +347,7 @@ the front door**: it auto-detects context and forwards dev commands into
   copy button (icon swaps to a checkmark — no JS-side copy to translate).
 - **Deleting is a soft delete** (`SoftDeletes` on `User`, added by
   `2026_08_08_090041_add_soft_deletes_to_users_table`). Nothing references a
-  user yet, but posts are meant to get an author, and a hard delete would
+  user yet, but pages are meant to get an author, and a hard delete would
   either orphan those rows or block the deletion. The row stays; access does
   not: Eloquent's user provider, the password broker and the route model
   binding all query through the default scope, so a deleted account cannot
@@ -386,7 +387,7 @@ the front door**: it auto-detects context and forwards dev commands into
   instead of a relative time — free, because the session driver writes
   those rows anyway. It therefore **depends on `SESSION_DRIVER=database`**;
   on another driver the table stays empty and nobody ever shows as online.
-- `User` carries `@property` docblocks like `Post` does: without them
+- `User` carries `@property` docblocks like `Page` does: without them
   larastan types the model from the migrations, where `last_active_at` is a
   plain `timestamp` — i.e. a `string` you cannot call `diffForHumans()` on.
 - **You cannot delete your own account**: the overview hides the button on
@@ -395,23 +396,28 @@ the front door**: it auto-detects context and forwards dev commands into
   the way the first admin was bootstrapped: a row without a password plus
   the reset flow.
 
-## 6. Blog
+## 6. Pages
 
-- **Model `Post`**: `title`, `slug` (unique, public URL key), `body`
+Formerly the blog; renamed as the first step of the pages rebuild
+(`docs/plan-paginas.md` — the empty `posts` table was dropped and
+recreated as `pages`, no data migration). The public URLs deliberately
+still say `/blog` until the dynamic URL step of the rebuild lands.
+
+- **Model `Page`**: `title`, `slug` (unique, public URL key), `body`
   (HTML from the editor), `published_at` (null = draft, future =
-  scheduled). `Post::published()` is the public query; `isPublished()`
+  scheduled). `Page::published()` is the public query; `isPublished()`
   and `isScheduled()` the per-model checks.
-- **Public**: `/` teases the `PostController::RECENT` newest published
-  posts and links on to `/blog`, the full archive (newest first,
-  `simplePaginate(10)`); `/blog/{slug}` shows one post. Drafts and
-  scheduled posts appear in none of the three. Both lists render the same
-  `partials/post-card.blade.php`.
-- **Admin CRUD** at `/admin/posts` (auth middleware on the route group;
+- **Public**: `/` teases the `PageController::RECENT` newest published
+  pages and links on to `/blog`, the full archive (newest first,
+  `simplePaginate(10)`); `/blog/{slug}` shows one page. Drafts and
+  scheduled pages appear in none of the three. Both lists render the same
+  `partials/page-card.blade.php`.
+- **Admin CRUD** at `/admin/pages` (auth middleware on the route group;
   every authenticated user is an admin). Create/edit share
-  `admin/posts/_form.blade.php`. The slug is generated from the title
-  when left empty (`StorePostRequest::prepareForValidation`);
+  `admin/pages/_form.blade.php`. The slug is generated from the title
+  when left empty (`StorePageRequest::prepareForValidation`);
   `published_at` is a date field, stored as midnight — day precision is
-  enough for this blog (decided 2026-08-08); empty = draft, future =
+  enough for this site (decided 2026-08-08); empty = draft, future =
   scheduled, and the field is prefilled on edit, so re-saving keeps the
   original publish date. The overview shows the status as a badge:
   green "Published", yellow "Scheduled", grey "Draft".
@@ -442,26 +448,31 @@ the front door**: it auto-detects context and forwards dev commands into
   is a `<div>`, because a `<label>` could only point at the hidden input.
   No image/attachment support (no upload backend).
 - **Sanitization**: the body is stored as-is and sanitized on output by
-  **stevebauman/purify** (HTMLPurifier) in `Post::bodyHtml()` — the only
+  **stevebauman/purify** (HTMLPurifier) in `Page::bodyHtml()` — the only
   place `{!! !!}` is allowed.
 - **Known npm audit finding** (accepted): quill 2.0.3 has advisory
   GHSA-v3m3-f69x-jf25 / CVE-2025-15056 (low, CVSS 2.0) — XSS via the HTML
   export. There is NO patched release (npm's "fix" is a downgrade to
   2.0.2, which does not remove the behavior). Already mitigated here: the
   export is never rendered raw — HTMLPurifier sanitizes on output, covered
-  by `PublicBlogTest::testUnsafeHtmlIsStrippedFromTheBody`. Update quill
+  by `PublicPagesTest::testUnsafeHtmlIsStrippedFromTheBody`. Update quill
   once a patched version ships.
 - **bladestan gotcha**: standard Blade idioms (`{{ __() }}`, `{{ old() }}`,
   `@error`'s `$message`) are loosely typed in compiled templates;
   `phpstan.dist.neon` carries three documented `ignoreErrors` entries for
   exactly those patterns (scoped to constructs that only exist in compiled
-  templates — real app code is unaffected). Shared partials get an
-  explicit `@php /** @var ... */ @endphp` type hint (see `_form`).
+  templates — real app code is unaffected). Shared partials need **no**
+  `@var` type hints — bladestan propagates the `@include` variables itself
+  (verified 2026-08-13 by removing them all). The one exception is the two
+  `_form` partials: create renders them without the model, edit with a
+  never-null one, so the `Model|null` union only exists in their
+  `@php /** @var ... */ @endphp` docblock — without it phpstan reports
+  both `property.nonObject` (create) and `nullsafe.neverNull` (edit).
 
 ## 7. Tests
 
 Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
-`Auth/PasswordResetTest`, `Blog/PublicBlogTest`, `Blog/AdminPostsTest`,
+`Auth/PasswordResetTest`, `Pages/PublicPagesTest`, `Pages/AdminPagesTest`,
 `Admin/DashboardTest`, `Admin/UsersTest`, `ActivityTrackingTest`,
 `NavigationTest`, `BreadcrumbsTest`, `LocalizationTest`,
 `AdminUserMigrationTest`, `MaintenancePageTest`, `UnderConstructionTest`,
@@ -469,7 +480,7 @@ Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
 `MaintenancePageTest`, which only renders a view and never touches a
 database. They are the default level here — almost everything is
 framework-coupled and best tested over HTTP.
-`tests/Unit/` is only for pure model logic (`PostTest`: `Post::excerpt()`
+`tests/Unit/` is only for pure model logic (`PageTest`: `Page::excerpt()`
 and the `isPublished()` boundaries); it still extends `Tests\TestCase`
 (the container is needed for the Purify facade) but skips
 `RefreshDatabase`, since nothing is persisted.
@@ -532,6 +543,6 @@ ticked off** — what exists is described in the sections above.
 - Admin dashboard content: `/admin` exists as the landing page of the
       admin area (and the target of its breadcrumb house) but is
       deliberately empty — no widgets decided on yet.
-- Post authorship: `posts` has no `user_id` yet. Users are soft-deleted
+- Page authorship: `pages` has no `user_id` yet. Users are soft-deleted
       (see §5), so that column can be added later without the delete button
-      ever orphaning a post.
+      ever orphaning a page.

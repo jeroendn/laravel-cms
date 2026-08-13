@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Post;
+use App\Models\Page;
 use Illuminate\Contracts\View\View;
 
-class PostController extends Controller
+class PageController extends Controller
 {
     /**
-     * How many posts the home page teases before pointing at the archive.
+     * How many pages the home page teases before pointing at the archive.
      */
     private const int RECENT = 5;
 
     public function home(): View
     {
         return view('home', [
-            'posts' => Post::published()
+            'pages' => Page::published()
                 ->latest('published_at')
                 ->take(self::RECENT)
                 ->get(),
@@ -24,17 +24,17 @@ class PostController extends Controller
 
     public function index(): View
     {
-        return view('posts.index', [
-            'posts' => Post::published()
+        return view('pages.index', [
+            'pages' => Page::published()
                 ->latest('published_at')
                 ->simplePaginate(10),
         ]);
     }
 
-    public function show(Post $post): View
+    public function show(Page $page): View
     {
-        abort_unless($post->isPublished(), 404);
+        abort_unless($page->isPublished(), 404);
 
-        return view('posts.show', ['post' => $post]);
+        return view('pages.show', ['page' => $page]);
     }
 }

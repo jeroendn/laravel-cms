@@ -37,6 +37,6 @@ class LocalizationTest extends TestCase
 
         $response = $this->get(route('home'));
 
-        $response->assertSee('Binnenkort verschijnen hier de eerste blogartikelen.');
+        $response->assertSee("Binnenkort verschijnen hier de eerste pagina's.");
     }
 }

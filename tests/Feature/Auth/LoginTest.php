@@ -35,14 +35,14 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->get(route('admin.posts.index'))->assertRedirect(route('login'));
+        $this->get(route('admin.pages.index'))->assertRedirect(route('login'));
 
         $response = $this->post(route('login'), [
             'email' => $user->email,
             'password' => 'password',
         ]);
 
-        $response->assertRedirect(route('admin.posts.index'));
+        $response->assertRedirect(route('admin.pages.index'));
     }
 
     public function testUserCannotLoginWithWrongPassword(): void

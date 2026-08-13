@@ -6,7 +6,7 @@ use Override;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
-class StorePostRequest extends FormRequest
+class StorePageRequest extends FormRequest
 {
     /**
      * The admin routes are behind the auth middleware and every
@@ -38,7 +38,7 @@ class StorePostRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:posts,slug'],
+            'slug' => ['required', 'string', 'max:255', 'unique:pages,slug'],
             'body' => ['required', 'string'],
             'published_at' => ['nullable', 'date'],
         ];

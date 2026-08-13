@@ -24,7 +24,7 @@ if (resetLink && resetLinkCopy) {
     });
 }
 
-// WYSIWYG editor for the admin post form. The toolbar is icon-only, so it
+// WYSIWYG editor for the admin page form. The toolbar is icon-only, so it
 // involves no translatable copy.
 const editorElement = document.getElementById('body-editor');
 
@@ -50,7 +50,7 @@ if (editorElement) {
     quill.root.setAttribute('aria-multiline', 'true');
     quill.root.setAttribute('aria-labelledby', 'body-label');
 
-    // Seed the editor from the hidden input (existing post, or old() input
+    // Seed the editor from the hidden input (existing page, or old() input
     // after a failed validation round-trip).
     if (input.value) {
         quill.setContents(quill.clipboard.convert({ html: input.value }));

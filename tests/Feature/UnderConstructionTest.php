@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Post;
+use App\Models\Page;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -19,14 +19,14 @@ class UnderConstructionTest extends TestCase
     {
         return [
             'home' => ['home'],
-            'archive' => ['posts.index'],
-            'post' => ['posts.show'],
+            'archive' => ['pages.index'],
+            'page' => ['pages.show'],
         ];
     }
 
     public function testThePublicPagesAreUnaffectedOutsideProduction(): void
     {
-        Post::factory()->published()->create(['title' => 'Magnesium and sleep']);
+        Page::factory()->published()->create(['title' => 'Magnesium and sleep']);
 
         $response = $this->get(route('home'));
 
@@ -37,10 +37,10 @@ class UnderConstructionTest extends TestCase
     #[DataProvider('publicRoutes')]
     public function testAGuestOnlySeesThePlaceholderOnProduction(string $route): void
     {
-        $post = Post::factory()->published()->create(['title' => 'Magnesium and sleep']);
+        $page = Page::factory()->published()->create(['title' => 'Magnesium and sleep']);
         $this->runningOnProduction();
 
-        $response = $this->get(route($route, $route === 'posts.show' ? $post : []));
+        $response = $this->get(route($route, $route === 'pages.show' ? $page : []));
 
         $response->assertServiceUnavailable();
         $response->assertViewIs('under-construction');
@@ -50,7 +50,7 @@ class UnderConstructionTest extends TestCase
 
     public function testAnAuthenticatedUserStillSeesTheRealSite(): void
     {
-        Post::factory()->published()->create(['title' => 'Magnesium and sleep']);
+        Page::factory()->published()->create(['title' => 'Magnesium and sleep']);
         $this->runningOnProduction();
 
         $response = $this->actingAs(User::factory()->create())->get(route('home'));

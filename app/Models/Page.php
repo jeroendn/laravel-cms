@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Override;
-use Database\Factories\PostFactory;
+use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -24,9 +24,9 @@ use Stevebauman\Purify\Facades\Purify;
  * @property Carbon|null $updated_at
  */
 #[Fillable(['title', 'slug', 'body', 'published_at'])]
-class Post extends Model
+class Page extends Model
 {
-    /** @use HasFactory<PostFactory> */
+    /** @use HasFactory<PageFactory> */
     use HasFactory;
 
     /**
@@ -43,7 +43,7 @@ class Post extends Model
     }
 
     /**
-     * Query only posts that are visible to the public.
+     * Query only pages that are visible to the public.
      *
      * @return Builder<static>
      */
@@ -80,7 +80,7 @@ class Post extends Model
     }
 
     /**
-     * A plain-text teaser of the body, for the post list.
+     * A plain-text teaser of the body, for the page list.
      */
     public function excerpt(int $length = 200): string
     {

@@ -1,8 +1,10 @@
 @extends('layouts.app')
 
+@section('title', __('Pages'))
+
 @section('content')
     <div class="page-header d-print-none">
-        <h1 class="page-title">{{ __('Recent pages') }}</h1>
+        <h1 class="page-title">{{ __('Pages') }}</h1>
     </div>
 
     @forelse ($pages as $page)
@@ -11,9 +13,9 @@
         <p>{{ __('The first pages will appear here soon.') }}</p>
     @endforelse
 
-    @if ($pages->isNotEmpty())
-        <a href="{{ route('pages.index') }}">
-            {{ __('All pages') }}<i class="fa-solid fa-arrow-right ms-2" aria-hidden="true"></i>
-        </a>
-    @endif
+    @include('partials.pagination', [
+        'paginator' => $pages,
+        'previousLabel' => __('Newer pages'),
+        'nextLabel' => __('Older pages'),
+    ])
 @endsection

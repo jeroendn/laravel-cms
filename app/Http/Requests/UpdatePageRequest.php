@@ -3,10 +3,10 @@
 namespace App\Http\Requests;
 
 use Override;
-use App\Models\Post;
+use App\Models\Page;
 use Illuminate\Validation\Rule;
 
-class UpdatePostRequest extends StorePostRequest
+class UpdatePageRequest extends StorePageRequest
 {
     /**
      * @return array<string, list<mixed>>
@@ -14,11 +14,11 @@ class UpdatePostRequest extends StorePostRequest
     #[Override]
     public function rules(): array
     {
-        $post = $this->route('post');
-        assert($post instanceof Post);
+        $page = $this->route('page');
+        assert($page instanceof Page);
 
         $rules = parent::rules();
-        $rules['slug'] = ['required', 'string', 'max:255', Rule::unique('posts', 'slug')->ignore($post)];
+        $rules['slug'] = ['required', 'string', 'max:255', Rule::unique('pages', 'slug')->ignore($page)];
 
         return $rules;
     }

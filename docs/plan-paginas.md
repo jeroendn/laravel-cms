@@ -39,7 +39,7 @@ as the record of the rebuild; it can be deleted once everything is done.
 
 ## Commits
 
-- [ ] **2. Mechanical rename posts → pages** — migration drops `posts`,
+- [x] **2. Mechanical rename posts → pages** — migration drops `posts`,
       creates `pages` (same columns); `Post` → `Page` across model,
       controllers, requests, factory, views, route names (`posts.*` →
       `pages.*`; public URLs stay `/blog` until commit 5), `/admin/pages`,
