@@ -14,58 +14,58 @@ class PublicPagesTest extends TestCase
     public function testAnUngroupedPageIsServedAtItsRootSlug(): void
     {
         Page::factory()->visible()->create([
-            'title' => 'Magnesium and sleep',
-            'slug' => 'sleep',
-            'body' => '<h2>Why magnesium?</h2><p>Because it works.</p>',
+            'title' => 'Dream Country',
+            'slug' => 'dream-country',
+            'body' => '<h2>Why dreams?</h2><p>They shape the waking world.</p>',
         ]);
 
-        $response = $this->get('/sleep');
+        $response = $this->get('/dream-country');
 
         $response->assertOk();
-        $response->assertSee('Magnesium and sleep');
-        $response->assertSee('<h2>Why magnesium?</h2>', false);
+        $response->assertSee('Dream Country');
+        $response->assertSee('<h2>Why dreams?</h2>', false);
     }
 
     public function testAGroupedPageIsOnlyServedAtItsFullPath(): void
     {
-        $group = PageGroup::factory()->create(['slug' => 'health']);
+        $group = PageGroup::factory()->create(['slug' => 'the-dreaming']);
         Page::factory()->visible()->create([
-            'slug' => 'sleep',
+            'slug' => 'lucien',
             'page_group_id' => $group->id,
             'published_at' => now()->subDay(),
         ]);
 
-        $this->get('/health/sleep')->assertOk();
-        $this->get('/sleep')->assertNotFound();
+        $this->get('/the-dreaming/lucien')->assertOk();
+        $this->get('/lucien')->assertNotFound();
     }
 
     public function testASubgroupPageIsOnlyServedAtItsFullPath(): void
     {
-        $group = PageGroup::factory()->create(['slug' => 'health']);
-        $subgroup = PageGroup::factory()->create(['slug' => 'minerals', 'parent_id' => $group->id]);
+        $group = PageGroup::factory()->create(['slug' => 'the-endless']);
+        $subgroup = PageGroup::factory()->create(['slug' => 'dream', 'parent_id' => $group->id]);
         Page::factory()->visible()->create([
-            'slug' => 'magnesium',
+            'slug' => 'morpheus',
             'page_group_id' => $subgroup->id,
             'published_at' => now()->subDay(),
         ]);
 
-        $this->get('/health/minerals/magnesium')->assertOk();
-        $this->get('/health/magnesium')->assertNotFound();
-        $this->get('/minerals/magnesium')->assertNotFound();
-        $this->get('/magnesium')->assertNotFound();
+        $this->get('/the-endless/dream/morpheus')->assertOk();
+        $this->get('/the-endless/morpheus')->assertNotFound();
+        $this->get('/dream/morpheus')->assertNotFound();
+        $this->get('/morpheus')->assertNotFound();
     }
 
     public function testAWrongGroupPrefixDoesNotServeThePage(): void
     {
-        $group = PageGroup::factory()->create(['slug' => 'health']);
-        PageGroup::factory()->create(['slug' => 'nutrition']);
+        $group = PageGroup::factory()->create(['slug' => 'the-dreaming']);
+        PageGroup::factory()->create(['slug' => 'the-waking-world']);
         Page::factory()->visible()->create([
-            'slug' => 'sleep',
+            'slug' => 'lucien',
             'page_group_id' => $group->id,
             'published_at' => now()->subDay(),
         ]);
 
-        $this->get('/nutrition/sleep')->assertNotFound();
+        $this->get('/the-waking-world/lucien')->assertNotFound();
     }
 
     public function testUnknownPathsAre404(): void
@@ -78,8 +78,8 @@ class PublicPagesTest extends TestCase
 
     public function testARootGroupRendersAnOverviewOfItsOwnPages(): void
     {
-        $group = PageGroup::factory()->create(['name' => 'Health', 'slug' => 'health']);
-        $subgroup = PageGroup::factory()->create(['name' => 'Minerals', 'slug' => 'minerals', 'parent_id' => $group->id]);
+        $group = PageGroup::factory()->create(['name' => 'The Dreaming', 'slug' => 'the-dreaming']);
+        $subgroup = PageGroup::factory()->create(['name' => 'Nightmares', 'slug' => 'nightmares', 'parent_id' => $group->id]);
         Page::factory()->visible()->create([
             'title' => 'Visible page',
             'page_group_id' => $group->id,
@@ -97,10 +97,10 @@ class PublicPagesTest extends TestCase
             'published_at' => now()->subDay(),
         ]);
 
-        $response = $this->get('/health');
+        $response = $this->get('/the-dreaming');
 
         $response->assertOk();
-        $response->assertSee('Health');
+        $response->assertSee('The Dreaming');
         $response->assertSee('Visible page');
         $response->assertDontSee('Draft page');
         $response->assertDontSee('Scheduled page');
@@ -111,24 +111,24 @@ class PublicPagesTest extends TestCase
 
     public function testASubgroupRendersItsOwnOverview(): void
     {
-        $group = PageGroup::factory()->create(['slug' => 'health']);
-        $subgroup = PageGroup::factory()->create(['name' => 'Minerals', 'slug' => 'minerals', 'parent_id' => $group->id]);
+        $group = PageGroup::factory()->create(['slug' => 'the-endless']);
+        $subgroup = PageGroup::factory()->create(['name' => 'Dream', 'slug' => 'dream', 'parent_id' => $group->id]);
         Page::factory()->visible()->create([
-            'title' => 'Magnesium basics',
+            'title' => 'Preludes and Nocturnes',
             'page_group_id' => $subgroup->id,
             'published_at' => now()->subDay(),
         ]);
 
-        $response = $this->get('/health/minerals');
+        $response = $this->get('/the-endless/dream');
 
         $response->assertOk();
-        $response->assertSee('Minerals');
-        $response->assertSee('Magnesium basics');
+        $response->assertSee('Dream');
+        $response->assertSee('Preludes and Nocturnes');
     }
 
     public function testTheOverviewSortsNewestFirstAndPaginates(): void
     {
-        $group = PageGroup::factory()->create(['slug' => 'health']);
+        $group = PageGroup::factory()->create(['slug' => 'the-dreaming']);
         Page::factory()->visible()->create([
             'title' => 'Oldest page',
             'page_group_id' => $group->id,
@@ -139,7 +139,7 @@ class PublicPagesTest extends TestCase
             'published_at' => now()->subDay(),
         ]);
 
-        $response = $this->get('/health');
+        $response = $this->get('/the-dreaming');
 
         $this->assertSame(10, substr_count((string) $response->getContent(), 'class="card mb-3"'));
         $response->assertDontSee('Oldest page');

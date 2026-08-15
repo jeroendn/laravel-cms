@@ -26,10 +26,10 @@ class BreadcrumbsTest extends TestCase
 
     public function testAPageTrailWalksItsGroupAncestors(): void
     {
-        $group = PageGroup::factory()->create(['name' => 'Health', 'slug' => 'health']);
-        $subgroup = PageGroup::factory()->create(['name' => 'Minerals', 'slug' => 'minerals', 'parent_id' => $group->id]);
+        $group = PageGroup::factory()->create(['name' => 'The Endless', 'slug' => 'the-endless']);
+        $subgroup = PageGroup::factory()->create(['name' => 'Dream', 'slug' => 'dream', 'parent_id' => $group->id]);
         $page = Page::factory()->visible()->create([
-            'title' => 'Magnesium basics',
+            'title' => 'Preludes and Nocturnes',
             'page_group_id' => $subgroup->id,
             'published_at' => now()->subDay(),
         ]);
@@ -39,18 +39,18 @@ class BreadcrumbsTest extends TestCase
         $this->assertStringContainsString('fa-house', $trail);
         $this->assertStringContainsString($group->url(), $trail);
         $this->assertStringContainsString($subgroup->url(), $trail);
-        $this->assertStringContainsString('Magnesium basics', $trail);
+        $this->assertStringContainsString('Preludes and Nocturnes', $trail);
     }
 
     public function testAGroupOverviewTrailLinksItsParent(): void
     {
-        $group = PageGroup::factory()->create(['name' => 'Health', 'slug' => 'health']);
-        $subgroup = PageGroup::factory()->create(['name' => 'Minerals', 'slug' => 'minerals', 'parent_id' => $group->id]);
+        $group = PageGroup::factory()->create(['name' => 'The Endless', 'slug' => 'the-endless']);
+        $subgroup = PageGroup::factory()->create(['name' => 'Death', 'slug' => 'death', 'parent_id' => $group->id]);
 
         $trail = $this->trail($this->get($subgroup->url()));
 
         $this->assertStringContainsString($group->url(), $trail);
-        $this->assertStringContainsString('Minerals', $trail);
+        $this->assertStringContainsString('Death', $trail);
     }
 
     public function testTheAdminOverviewsHaveBreadcrumbs(): void

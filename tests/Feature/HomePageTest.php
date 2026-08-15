@@ -23,16 +23,16 @@ class HomePageTest extends TestCase
     public function testHomeRendersTheVisiblePageSluggedHome(): void
     {
         Page::factory()->visible()->create([
-            'title' => 'Welcome to Magnesium',
+            'title' => 'Welcome to the Dreaming',
             'slug' => 'home',
-            'body' => '<p>Feel better.</p>',
+            'body' => '<p>All dreams begin here.</p>',
         ]);
 
         $response = $this->get(route('home'));
 
         $response->assertOk();
-        $response->assertSee('Welcome to Magnesium');
-        $response->assertSee('Feel better.');
+        $response->assertSee('Welcome to the Dreaming');
+        $response->assertSee('All dreams begin here.');
     }
 
     public function testADraftHomePageLeavesHomeBare(): void

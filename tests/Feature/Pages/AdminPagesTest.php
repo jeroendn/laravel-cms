@@ -26,7 +26,7 @@ class AdminPagesTest extends TestCase
 
     public function testIndexListsAllPagesWithTheirGroup(): void
     {
-        $group = PageGroup::factory()->create(['name' => 'Health']);
+        $group = PageGroup::factory()->create(['name' => 'The Endless']);
         Page::factory()->visible()->create(['title' => 'Published page']);
         Page::factory()->create(['title' => 'Draft page', 'page_group_id' => $group->id]);
 
@@ -35,13 +35,13 @@ class AdminPagesTest extends TestCase
         $response->assertOk();
         $response->assertSee('Published page');
         $response->assertSee('Draft page');
-        $response->assertSee('Health');
+        $response->assertSee('The Endless');
     }
 
     public function testAdminCanViewTheCreateAndEditForms(): void
     {
-        $parent = PageGroup::factory()->create(['name' => 'Health']);
-        PageGroup::factory()->create(['name' => 'Sleep', 'parent_id' => $parent->id]);
+        $parent = PageGroup::factory()->create(['name' => 'The Endless']);
+        PageGroup::factory()->create(['name' => 'Dream', 'parent_id' => $parent->id]);
         $page = Page::factory()->create(['title' => 'Existing page']);
         $admin = $this->admin();
 
@@ -49,7 +49,7 @@ class AdminPagesTest extends TestCase
         $create->assertOk();
         $create->assertSee('body-editor');
         // The group select labels a subgroup with its parent's name.
-        $create->assertSee('Health / Sleep');
+        $create->assertSee('The Endless / Dream');
         // A new page starts as a draft: the toggle is checked by default.
         $this->assertMatchesRegularExpression('/name="is_draft" value="1"\s+checked/', (string) $create->getContent());
 
@@ -60,8 +60,8 @@ class AdminPagesTest extends TestCase
 
     public function testTheFormCarriesTheDataForTheLiveUrlPreview(): void
     {
-        $parent = PageGroup::factory()->create(['slug' => 'health']);
-        PageGroup::factory()->create(['slug' => 'sleep', 'parent_id' => $parent->id]);
+        $parent = PageGroup::factory()->create(['slug' => 'the-endless']);
+        PageGroup::factory()->create(['slug' => 'dream', 'parent_id' => $parent->id]);
 
         $response = $this->actingAs($this->admin())->get(route('admin.pages.create'));
 
@@ -69,13 +69,13 @@ class AdminPagesTest extends TestCase
         $response->assertSee('data-base="' . url('/') . '"', false);
         $response->assertSee('data-home-slug="home"', false);
         // A grouped page's URL repeats its group's full path, subgroups included.
-        $response->assertSee('data-path="health/sleep"', false);
+        $response->assertSee('data-path="the-endless/dream"', false);
     }
 
     public function testAdminCanCreateDraftWithGeneratedSlug(): void
     {
         $response = $this->actingAs($this->admin())->post(route('admin.pages.store'), [
-            'title' => 'Magnesium and Sports',
+            'title' => 'The Kindly Ones',
             'slug' => '',
             'body' => '<p>Content</p>',
             'is_draft' => '1',
@@ -83,8 +83,8 @@ class AdminPagesTest extends TestCase
 
         $response->assertRedirect(route('admin.pages.index'));
         $this->assertDatabaseHas('pages', [
-            'title' => 'Magnesium and Sports',
-            'slug' => 'magnesium-and-sports',
+            'title' => 'The Kindly Ones',
+            'slug' => 'the-kindly-ones',
             'is_draft' => true,
             'show_in_menu' => false,
             'priority' => 0,
@@ -243,11 +243,11 @@ class AdminPagesTest extends TestCase
 
     public function testThePageSlugMayNotCollideWithAGroupSlug(): void
     {
-        PageGroup::factory()->create(['slug' => 'health']);
+        PageGroup::factory()->create(['slug' => 'the-dreaming']);
 
         $response = $this->actingAs($this->admin())->post(route('admin.pages.store'), [
-            'title' => 'Health',
-            'slug' => 'health',
+            'title' => 'The Dreaming',
+            'slug' => 'the-dreaming',
             'body' => '<p>Content</p>',
         ]);
 

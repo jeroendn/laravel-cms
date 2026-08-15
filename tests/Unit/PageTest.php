@@ -12,9 +12,9 @@ class PageTest extends TestCase
 {
     public function testExcerptStripsMarkupAndCollapsesWhitespace(): void
     {
-        $page = new Page(['body' => "<p>Magnesium   <strong>helps</strong>\n\nwith sleep.</p>"]);
+        $page = new Page(['body' => "<p>Dream   <strong>rules</strong>\n\nthe Dreaming.</p>"]);
 
-        $this->assertSame('Magnesium helps with sleep.', $page->excerpt());
+        $this->assertSame('Dream rules the Dreaming.', $page->excerpt());
     }
 
     public function testExcerptLeavesShortBodiesIntact(): void

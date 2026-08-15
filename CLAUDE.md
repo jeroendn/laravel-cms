@@ -1,6 +1,6 @@
-# CLAUDE.md — Magnesium
+# CLAUDE.md — Laravel CMS
 
-Technical specification & working agreements for the Magnesium website.
+Technical specification & working agreements for the Laravel CMS.
 This file is loaded automatically as context.
 
 > ## ⚠️ Maintenance rule (hard, always applies)
@@ -23,12 +23,17 @@ This file is loaded automatically as context.
 
 ## 1. What this is
 
-A **website** for a client, built with Laravel and styled with
-**Tabler** (Bootstrap 5). The content system (**pages** with page
-groups, dynamic URLs and a dynamic menu — admin CRUD included, see §6),
-authentication, user management and the Dutch localization are in
-place; §9 lists what is not. Until the client goes live the public side
-is hidden behind a placeholder — see §2.
+A **generic CMS for client websites**, built with Laravel and styled with
+**Tabler** (Bootstrap 5). One codebase serves every site: everything
+site-specific lives in two untracked per-site files — `.env` (name,
+container, database, admin email) and `docker/caddy/Caddyfile` (domains) —
+and in the site's own database, so a site is a plain clone of this repo
+plus that configuration (setup steps in the README; feature work is never
+site-specific). The content system (**pages** with page groups, dynamic
+URLs and a dynamic menu — admin CRUD included, see §6), authentication,
+user management and the Dutch localization are in place; §9 lists what is
+not. Until a site goes live its public side is hidden behind a
+placeholder — see §2.
 
 ## 2. Architecture & environment
 
@@ -51,13 +56,13 @@ is hidden behind a placeholder — see §2.
   only reachable through the internal Docker network). Without it Laravel
   generates `http://` asset/route URLs and the browser blocks them as
   mixed content — no JS runs at all.
-- Database: shared **MariaDB** (`mariadb_docker_server`), own database
-  `magnesium`, user `magnesium`. Reachable only within the
-  `docker_server_database` network, not from the host. Laravel reads the
-  credentials from `.env` (`DB_*`).
-- **Least privilege on prod**: the app user `magnesium` only has
-  SELECT/INSERT/UPDATE/DELETE; DDL (migrations) runs as a separate user
-  `magnesium_migrate` via the `mariadb_migrations` connection
+- Database: shared **MariaDB** (`mariadb_docker_server`), own database and
+  user per site. Reachable only within the `docker_server_database`
+  network, not from the host. Laravel reads the credentials from `.env`
+  (`DB_*`).
+- **Least privilege on prod**: the site's app user only has
+  SELECT/INSERT/UPDATE/DELETE; DDL (migrations) runs as a separate
+  per-site user via the `mariadb_migrations` connection
   (`config/database.php`), fed by `DB_MIGRATIONS_USERNAME`/`_PASSWORD` in
   prod's `.env`. `./develop checkout` and `./deploy` pass
   `--database=mariadb_migrations` to `artisan migrate` — do the same for

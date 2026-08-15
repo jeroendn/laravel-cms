@@ -14,27 +14,27 @@ class UnderConstructionTest extends TestCase
 
     public function testThePublicPagesAreUnaffectedOutsideProduction(): void
     {
-        Page::factory()->visible()->create(['title' => 'Magnesium and sleep', 'slug' => 'sleep']);
+        Page::factory()->visible()->create(['title' => 'Season of Mists', 'slug' => 'season-of-mists']);
 
-        $response = $this->get('/sleep');
+        $response = $this->get('/season-of-mists');
 
         $response->assertOk();
-        $response->assertSee('Magnesium and sleep');
+        $response->assertSee('Season of Mists');
     }
 
     public function testAGuestOnlySeesThePlaceholderOnProduction(): void
     {
-        PageGroup::factory()->create(['slug' => 'health']);
-        Page::factory()->visible()->create(['title' => 'Magnesium and sleep', 'slug' => 'sleep']);
+        PageGroup::factory()->create(['slug' => 'the-endless']);
+        Page::factory()->visible()->create(['title' => 'Season of Mists', 'slug' => 'season-of-mists']);
         $this->runningOnProduction();
 
-        foreach (['/', '/sleep', '/health'] as $url) {
+        foreach (['/', '/season-of-mists', '/the-endless'] as $url) {
             $response = $this->get($url);
 
             $response->assertServiceUnavailable();
             $response->assertViewIs('under-construction');
             $response->assertSee(__('This website is under construction'));
-            $response->assertDontSee('Magnesium and sleep');
+            $response->assertDontSee('Season of Mists');
         }
     }
 
@@ -61,13 +61,13 @@ class UnderConstructionTest extends TestCase
 
     public function testAnAuthenticatedUserStillSeesTheRealSite(): void
     {
-        Page::factory()->visible()->create(['title' => 'Magnesium and sleep', 'slug' => 'sleep']);
+        Page::factory()->visible()->create(['title' => 'Season of Mists', 'slug' => 'season-of-mists']);
         $this->runningOnProduction();
 
-        $response = $this->actingAs(User::factory()->create())->get('/sleep');
+        $response = $this->actingAs(User::factory()->create())->get('/season-of-mists');
 
         $response->assertOk();
-        $response->assertSee('Magnesium and sleep');
+        $response->assertSee('Season of Mists');
     }
 
     /** Without a way in, the placeholder would lock out the admin too. */

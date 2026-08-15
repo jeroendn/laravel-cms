@@ -81,7 +81,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          # Matches the Node version in the php_magnesium container.
+          # Matches the Node version in the app container.
           node-version: '24'
           cache: npm
 
