@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Bootstrap Admin E-mail
+    |--------------------------------------------------------------------------
+    |
+    | The create_admin_user data migration seeds the first admin account with
+    | this address (registration is disabled). It reads the config key, not
+    | env() directly — env() returns null once the config is cached.
+    |
+    */
+
+    'admin_email' => env('ADMIN_EMAIL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

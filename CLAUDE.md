@@ -358,10 +358,12 @@ the app container. Anything it doesn't recognize is passed straight to
   ends on the public home — you are a guest by then. Laravel's
   `redirect()->intended()` keeps priority throughout, so being bounced off
   an admin page still returns you to that page.
-- The first admin (`info@jeroendn.nl`) is bootstrapped by a **data
-  migration** (`2026_08_06_084152_create_admin_user`) without a usable
-  password (random hash — the column is not nullable); the admin gains
-  access via the password-reset flow. In dev (`MAIL_MAILER=log`) the reset
+- The first admin (**`ADMIN_EMAIL`** in `.env`, read through
+  `config('app.admin_email')` — never `env()`, which is null under prod's
+  cached config; migrating with it unset aborts with a clear message) is
+  bootstrapped by a **data migration** (`2026_08_06_084152_create_admin_user`)
+  without a usable password (random hash — the column is not nullable); the
+  admin gains access via the password-reset flow. In dev (`MAIL_MAILER=log`) the reset
   link lands in `storage/logs/laravel.log`; prod needs working `MAIL_*`
   settings in `.env` before the reset mail can arrive.
 ### User management
