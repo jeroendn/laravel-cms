@@ -38,27 +38,27 @@ class MenuTest extends TestCase
 
     public function testMenuItemsSortByPriorityThenAlphabetically(): void
     {
-        Page::factory()->visible()->create(['title' => 'Banana', 'show_in_menu' => true]);
-        Page::factory()->visible()->create(['title' => 'apple', 'show_in_menu' => true]);
-        Page::factory()->visible()->create(['title' => 'Zebra', 'show_in_menu' => true, 'priority' => 5]);
+        Page::factory()->visible()->create(['title' => 'Despair', 'show_in_menu' => true]);
+        Page::factory()->visible()->create(['title' => 'death', 'show_in_menu' => true]);
+        Page::factory()->visible()->create(['title' => 'Destiny', 'show_in_menu' => true, 'priority' => 5]);
 
         $response = $this->get('/');
 
-        $response->assertSeeInOrder(['Zebra', 'apple', 'Banana']);
+        $response->assertSeeInOrder(['Destiny', 'death', 'Despair']);
     }
 
     public function testAGroupDropdownSortsItsPagesAndEndsWithShowAll(): void
     {
         app()->setLocale('en');
-        $group = PageGroup::factory()->create(['name' => 'Health', 'slug' => 'health', 'show_in_menu' => true]);
+        $group = PageGroup::factory()->create(['name' => 'The Endless', 'slug' => 'the-endless', 'show_in_menu' => true]);
         Page::factory()->visible()->create([
-            'title' => 'Sleep better',
+            'title' => 'A Game of You',
             'show_in_menu' => true,
             'page_group_id' => $group->id,
             'published_at' => now()->subDay(),
         ]);
         Page::factory()->visible()->create([
-            'title' => 'Always first',
+            'title' => 'The Wake',
             'show_in_menu' => true,
             'priority' => 9,
             'page_group_id' => $group->id,
@@ -67,7 +67,7 @@ class MenuTest extends TestCase
 
         $response = $this->get('/');
 
-        $response->assertSeeInOrder(['Health', 'Always first', 'Sleep better', 'Show All']);
+        $response->assertSeeInOrder(['The Endless', 'The Wake', 'A Game of You', 'Show All']);
         $response->assertSee($group->url());
     }
 
@@ -84,15 +84,15 @@ class MenuTest extends TestCase
     public function testASubgroupBecomesAFlyoutSubmenu(): void
     {
         app()->setLocale('en');
-        $group = PageGroup::factory()->create(['name' => 'Health', 'slug' => 'health', 'show_in_menu' => true]);
+        $group = PageGroup::factory()->create(['name' => 'The Endless', 'slug' => 'the-endless', 'show_in_menu' => true]);
         $subgroup = PageGroup::factory()->create([
-            'name' => 'Minerals',
-            'slug' => 'minerals',
+            'name' => 'Dream',
+            'slug' => 'dream',
             'parent_id' => $group->id,
             'show_in_menu' => true,
         ]);
         Page::factory()->visible()->create([
-            'title' => 'Magnesium basics',
+            'title' => 'Preludes and Nocturnes',
             'show_in_menu' => true,
             'page_group_id' => $subgroup->id,
             'published_at' => now()->subDay(),
@@ -101,13 +101,13 @@ class MenuTest extends TestCase
         $response = $this->get('/');
 
         $response->assertSee('data-submenu', false);
-        $response->assertSeeInOrder(['Minerals', 'Magnesium basics', 'Show All']);
+        $response->assertSeeInOrder(['Dream', 'Preludes and Nocturnes', 'Show All']);
         $response->assertSee($subgroup->url());
     }
 
     public function testAHiddenSubgroupKeepsItsPagesOutOfTheMenu(): void
     {
-        $group = PageGroup::factory()->create(['name' => 'Health', 'show_in_menu' => true]);
+        $group = PageGroup::factory()->create(['name' => 'The Endless', 'show_in_menu' => true]);
         $subgroup = PageGroup::factory()->create(['name' => 'Hidden subgroup', 'parent_id' => $group->id]);
         Page::factory()->visible()->create([
             'title' => 'Tucked away',
@@ -125,7 +125,7 @@ class MenuTest extends TestCase
     public function testTheHomePageAppearsViaItsOwnToggle(): void
     {
         Page::factory()->visible()->create([
-            'title' => 'Welcome home',
+            'title' => 'Welcome to the Dreaming',
             'slug' => 'home',
             'show_in_menu' => true,
         ]);
@@ -133,18 +133,18 @@ class MenuTest extends TestCase
 
         $response = $this->get($other->url());
 
-        $response->assertSee('Welcome home');
+        $response->assertSee('Welcome to the Dreaming');
         $response->assertSee('href="' . route('home') . '"', false);
     }
 
     public function testAHomePageWithoutTheToggleAddsNoMenuItem(): void
     {
-        Page::factory()->visible()->create(['title' => 'Welcome home', 'slug' => 'home']);
+        Page::factory()->visible()->create(['title' => 'Welcome to the Dreaming', 'slug' => 'home']);
         $other = Page::factory()->visible()->create();
 
         $response = $this->get($other->url());
 
-        $response->assertDontSee('Welcome home');
+        $response->assertDontSee('Welcome to the Dreaming');
     }
 
     public function testAMenuHiddenPageStaysReachable(): void

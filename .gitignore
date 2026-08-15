@@ -29,6 +29,9 @@ Homestead.json
 .phpactor.json
 auth.json
 
+# Per-site Caddy config, created from the Caddyfile.example
+/docker/caddy/Caddyfile
+
 # Tool caches (rector/phpstan/cs-fixer/phpunit); tmp/.gitkeep keeps the dir in git
 /tmp/*
 !/tmp/.gitkeep

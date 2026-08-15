@@ -1,6 +1,6 @@
 {
-    "name": "jeroendn/magnesium-website",
-    "description": "Magnesium — website",
+    "name": "jeroendn/laravel-cms",
+    "description": "Generic CMS built with Laravel",
     "license": "proprietary",
     "type": "project",
     "require": {

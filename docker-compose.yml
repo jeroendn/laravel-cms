@@ -1,9 +1,9 @@
 services:
-  php_magnesium:
-    hostname: magnesium
+  php:
+    hostname: ${APP_CONTAINER:-php_cms}
     build: docker/php/.
-    image: php_magnesium:apache
-    container_name: php_magnesium
+    image: ${APP_CONTAINER:-php_cms}:apache
+    container_name: ${APP_CONTAINER:-php_cms}
     restart: unless-stopped
     environment:
       TZ: Europe/Amsterdam

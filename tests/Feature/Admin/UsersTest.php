@@ -29,13 +29,13 @@ class UsersTest extends TestCase
 
     public function testIndexListsTheAccounts(): void
     {
-        User::factory()->create(['name' => 'Client editor', 'email' => 'editor@example.test']);
+        User::factory()->create(['name' => 'Lucien', 'email' => 'lucien@example.test']);
 
         $response = $this->actingAs($this->admin())->get(route('admin.users.index'));
 
         $response->assertOk();
-        $response->assertSee('Client editor');
-        $response->assertSee('editor@example.test');
+        $response->assertSee('Lucien');
+        $response->assertSee('lucien@example.test');
     }
 
     public function testAdminCanViewTheCreateAndEditForms(): void
@@ -55,15 +55,15 @@ class UsersTest extends TestCase
         $admin = $this->admin();
 
         $response = $this->actingAs($admin)->post(route('admin.users.store'), [
-            'name' => 'New editor',
-            'email' => 'new@example.test',
+            'name' => 'Matthew',
+            'email' => 'matthew@example.test',
         ]);
 
         $response->assertRedirect(route('admin.users.index'));
         $response->assertSessionHas('resetLink');
-        $this->assertDatabaseHas('users', ['name' => 'New editor', 'email' => 'new@example.test']);
+        $this->assertDatabaseHas('users', ['name' => 'Matthew', 'email' => 'matthew@example.test']);
 
-        $created = User::query()->where('email', 'new@example.test')->firstOrFail();
+        $created = User::query()->where('email', 'matthew@example.test')->firstOrFail();
         $this->assertSame('bcrypt', Hash::info($created->password)['algoName']);
 
         // The link is only handed over on screen; nothing is mailed.
@@ -77,8 +77,8 @@ class UsersTest extends TestCase
     public function testTheGeneratedLinkLetsTheNewUserSetAPassword(): void
     {
         $this->actingAs($this->admin())->post(route('admin.users.store'), [
-            'name' => 'New editor',
-            'email' => 'new@example.test',
+            'name' => 'Matthew',
+            'email' => 'matthew@example.test',
         ]);
 
         $link = $this->resetLink();
@@ -87,13 +87,13 @@ class UsersTest extends TestCase
 
         $response = $this->post(route('password.update'), [
             'token' => $this->tokenFrom($link),
-            'email' => 'new@example.test',
+            'email' => 'matthew@example.test',
             'password' => 'a-brand-new-password',
             'password_confirmation' => 'a-brand-new-password',
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));
-        $user = User::query()->where('email', 'new@example.test')->firstOrFail();
+        $user = User::query()->where('email', 'matthew@example.test')->firstOrFail();
         $this->assertTrue(Hash::check('a-brand-new-password', $user->password));
     }
 
@@ -134,11 +134,11 @@ class UsersTest extends TestCase
 
     public function testAdminCanUpdateAUserKeepingItsOwnEmail(): void
     {
-        $user = User::factory()->create(['email' => 'editor@example.test']);
+        $user = User::factory()->create(['email' => 'lucien@example.test']);
 
         $response = $this->actingAs($this->admin())->put(route('admin.users.update', $user), [
             'name' => 'Renamed editor',
-            'email' => 'editor@example.test',
+            'email' => 'lucien@example.test',
         ]);
 
         $response->assertRedirect(route('admin.users.index'));
@@ -214,16 +214,16 @@ class UsersTest extends TestCase
 
     public function testReAddingADeletedAddressRevivesTheAccount(): void
     {
-        $user = User::factory()->create(['name' => 'Former editor', 'email' => 'editor@example.test']);
+        $user = User::factory()->create(['name' => 'Former editor', 'email' => 'lucien@example.test']);
         $user->delete();
 
         $response = $this->actingAs($this->admin())->post(route('admin.users.store'), [
             'name' => 'Returning editor',
-            'email' => 'editor@example.test',
+            'email' => 'lucien@example.test',
         ]);
 
         $response->assertRedirect(route('admin.users.index'));
-        $this->assertSame(1, User::query()->where('email', 'editor@example.test')->count());
+        $this->assertSame(1, User::query()->where('email', 'lucien@example.test')->count());
 
         $revived = $user->fresh();
         $this->assertNotNull($revived);
@@ -237,12 +237,12 @@ class UsersTest extends TestCase
     {
         // A model-level soft delete leaves the token untouched, standing in
         // for a row deleted before destroy() started revoking access.
-        $user = User::factory()->create(['email' => 'editor@example.test', 'remember_token' => 'stale-token']);
+        $user = User::factory()->create(['email' => 'lucien@example.test', 'remember_token' => 'stale-token']);
         $user->delete();
 
         $this->actingAs($this->admin())->post(route('admin.users.store'), [
             'name' => 'Returning editor',
-            'email' => 'editor@example.test',
+            'email' => 'lucien@example.test',
         ]);
 
         $this->assertNotSame('stale-token', User::findOrFail($user->id)->remember_token);

@@ -7,7 +7,8 @@ SUCCESS="\e[42m"
 WARNING="\e[43m"
 ERROR="\e[41m"
 
-CONTAINER_NAME="php_magnesium"
+CONTAINER_NAME="$(sed -n 's/^APP_CONTAINER=//p' .env 2>/dev/null | tail -n1 | tr -d "'\"")"
+CONTAINER_NAME="${CONTAINER_NAME:-php_cms}"
 
 trap 'echo -e "${ERROR}Deployment failed — the site is still in maintenance mode${NC}"
       echo -e "${WARNING}Fix the problem and re-run ./deploy, or force it back online with:${NC}"
@@ -41,7 +42,7 @@ echo -e "${SUCCESS}Rebuilding Docker image${NC}"
 sudo docker compose build --no-cache --pull
 
 echo -e "${SUCCESS}Restarting Docker containers${NC}"
-sudo docker compose down
+sudo docker compose down --remove-orphans
 sudo docker compose up -d
 
 echo -e "${SUCCESS}Installing libraries${NC}"

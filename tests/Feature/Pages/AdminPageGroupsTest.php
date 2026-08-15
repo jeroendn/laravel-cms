@@ -26,14 +26,14 @@ class AdminPageGroupsTest extends TestCase
 
     public function testIndexListsGroupsWithTheirParent(): void
     {
-        $parent = PageGroup::factory()->create(['name' => 'Health']);
-        PageGroup::factory()->create(['name' => 'Sleep', 'parent_id' => $parent->id]);
+        $parent = PageGroup::factory()->create(['name' => 'Dream']);
+        PageGroup::factory()->create(['name' => 'Nightmares', 'parent_id' => $parent->id]);
 
         $response = $this->actingAs($this->admin())->get(route('admin.page-groups.index'));
 
         $response->assertOk();
         // Sorted by name; the subgroup row repeats its parent's name.
-        $response->assertSeeInOrder(['Health', 'Sleep', 'Health']);
+        $response->assertSeeInOrder(['Dream', 'Nightmares', 'Dream']);
     }
 
     public function testAdminCanViewTheCreateAndEditForms(): void
@@ -52,12 +52,12 @@ class AdminPageGroupsTest extends TestCase
 
     public function testTheFormCarriesTheDataForTheLiveUrlPreview(): void
     {
-        PageGroup::factory()->create(['slug' => 'health']);
+        PageGroup::factory()->create(['slug' => 'the-dreaming']);
 
         $response = $this->actingAs($this->admin())->get(route('admin.page-groups.create'));
 
         $response->assertSee('id="url-preview"', false);
-        $response->assertSee('data-path="health"', false);
+        $response->assertSee('data-path="the-dreaming"', false);
         // Only a page can end up at the site root, never a group.
         $response->assertSee('data-home-slug=""', false);
     }
@@ -65,14 +65,14 @@ class AdminPageGroupsTest extends TestCase
     public function testAdminCanCreateAGroupWithGeneratedSlug(): void
     {
         $response = $this->actingAs($this->admin())->post(route('admin.page-groups.store'), [
-            'name' => 'Magnesium and Health',
+            'name' => 'The Endless',
             'slug' => '',
         ]);
 
         $response->assertRedirect(route('admin.page-groups.index'));
         $this->assertDatabaseHas('page_groups', [
-            'name' => 'Magnesium and Health',
-            'slug' => 'magnesium-and-health',
+            'name' => 'The Endless',
+            'slug' => 'the-endless',
             'show_in_menu' => false,
             'priority' => 0,
             'parent_id' => null,
@@ -144,13 +144,13 @@ class AdminPageGroupsTest extends TestCase
     public function testTheSlugMustBeUnique(): void
     {
         $parent = PageGroup::factory()->create();
-        PageGroup::factory()->create(['slug' => 'tips', 'parent_id' => $parent->id]);
+        PageGroup::factory()->create(['slug' => 'ravens', 'parent_id' => $parent->id]);
 
         // Also across scopes: this attempt sits at the root, the existing
         // slug in a group.
         $response = $this->actingAs($this->admin())->post(route('admin.page-groups.store'), [
-            'name' => 'Tips',
-            'slug' => 'tips',
+            'name' => 'Ravens',
+            'slug' => 'ravens',
         ]);
 
         $response->assertSessionHasErrors('slug');
@@ -158,11 +158,11 @@ class AdminPageGroupsTest extends TestCase
 
     public function testTheSlugMayNotCollideWithAPageSlug(): void
     {
-        Page::factory()->create(['slug' => 'tips']);
+        Page::factory()->create(['slug' => 'ravens']);
 
         $response = $this->actingAs($this->admin())->post(route('admin.page-groups.store'), [
-            'name' => 'Tips',
-            'slug' => 'tips',
+            'name' => 'Ravens',
+            'slug' => 'ravens',
         ]);
 
         $response->assertSessionHasErrors('slug');

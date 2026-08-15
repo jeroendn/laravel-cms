@@ -2,7 +2,8 @@
 
 set -uo pipefail
 
-CONTAINER="${MAGNESIUM_CONTAINER:-php_magnesium}"
+CONTAINER="${APP_CONTAINER:-$(sed -n 's/^APP_CONTAINER=//p' .env 2>/dev/null | tail -n1 | tr -d "'\"")}"
+CONTAINER="${CONTAINER:-php_cms}"
 
 # Detect Git Bash on Windows: there `uname -s` prints "MINGW64_NT-..." or
 # "MSYS_NT-...". Git Bash needs two workarounds that must NOT apply on
@@ -54,7 +55,7 @@ usage() {
     cat <<'EOF'
 Usage: ./develop <command>
 
-Dev commands (executed inside the php_magnesium container):
+Dev commands (executed inside the app container):
   checkout, c                  composer + npm install, asset build and migrations
   code-quality-assurance, cqa  quality gate: normalize + validate + rector + cs-fix + phpstan + phpunit
   shell                        open an interactive shell in the container

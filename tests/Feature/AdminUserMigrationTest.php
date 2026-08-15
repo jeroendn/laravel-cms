@@ -12,12 +12,12 @@ class AdminUserMigrationTest extends TestCase
 
     public function testMigrationsCreateTheAdminUser(): void
     {
-        $this->assertDatabaseHas('users', ['email' => 'info@jeroendn.nl']);
+        $this->assertDatabaseHas('users', ['email' => config('app.admin_email')]);
     }
 
     public function testAdminUserCannotLoginWithoutSettingAPasswordFirst(): void
     {
-        $admin = User::query()->where('email', 'info@jeroendn.nl')->firstOrFail();
+        $admin = User::query()->where('email', config('app.admin_email'))->firstOrFail();
 
         $response = $this->from(route('login'))->post(route('login'), [
             'email' => $admin->email,

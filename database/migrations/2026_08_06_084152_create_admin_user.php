@@ -5,25 +5,27 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-// Data migration: bootstraps the first admin account. Registration is
-// disabled, so without this row nobody could ever log in. The account is
-// created WITHOUT a usable password (an unguessable random hash — the
-// column is not nullable); the admin sets a real password through the
-// password-reset flow (/password/reset).
+// Registration is disabled, so without this row nobody could ever log in.
+// The random password hash is deliberate (the column is not nullable) — the
+// admin gets in through the password-reset flow.
 return new class extends Migration {
-    private const string ADMIN_EMAIL = 'info@jeroendn.nl';
-
     public function up(): void
     {
-        $exists = DB::table('users')->where('email', self::ADMIN_EMAIL)->exists();
+        $email = config('app.admin_email');
+
+        if (! is_string($email) || $email === '') {
+            throw new RuntimeException('Set ADMIN_EMAIL in .env before migrating — it seeds the first admin account.');
+        }
+
+        $exists = DB::table('users')->where('email', $email)->exists();
 
         if ($exists) {
             return;
         }
 
         DB::table('users')->insert([
-            'name' => 'Jeroen',
-            'email' => self::ADMIN_EMAIL,
+            'name' => 'Admin',
+            'email' => $email,
             'password' => Hash::make(Str::random(64)),
             'created_at' => now(),
             'updated_at' => now(),
@@ -32,6 +34,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        DB::table('users')->where('email', self::ADMIN_EMAIL)->delete();
+        DB::table('users')->where('email', config('app.admin_email'))->delete();
     }
 };

@@ -70,7 +70,7 @@ class SearchIndexingTest extends TestCase
     public function testThePublicPagesStayIndexable(): void
     {
         $page = Page::factory()->visible()->create();
-        $group = PageGroup::factory()->create(['slug' => 'health']);
+        $group = PageGroup::factory()->create(['slug' => 'the-dreaming']);
 
         foreach ([route('home'), $page->url(), $group->url()] as $url) {
             $response = $this->get($url);

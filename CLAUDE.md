@@ -1,6 +1,6 @@
-# CLAUDE.md — Magnesium
+# CLAUDE.md — Laravel CMS
 
-Technical specification & working agreements for the Magnesium website.
+Technical specification & working agreements for the Laravel CMS.
 This file is loaded automatically as context.
 
 > ## ⚠️ Maintenance rule (hard, always applies)
@@ -17,40 +17,52 @@ This file is loaded automatically as context.
 > cases and gotchas belong here — do not restate them there. When in doubt,
 > leave the README alone.
 >
-> Last updated: 2026-08-13
+> Last updated: 2026-08-15
 
 ---
 
 ## 1. What this is
 
-A **website** for a client, built with Laravel and styled with
-**Tabler** (Bootstrap 5). The content system (**pages** with page
-groups, dynamic URLs and a dynamic menu — admin CRUD included, see §6),
-authentication, user management and the Dutch localization are in
-place; §9 lists what is not. Until the client goes live the public side
-is hidden behind a placeholder — see §2.
+A **generic CMS for client websites**, built with Laravel and styled with
+**Tabler** (Bootstrap 5). One codebase serves every site: everything
+site-specific lives in two untracked per-site files — `.env` (name,
+container, database, admin email) and `docker/caddy/Caddyfile` (domains) —
+and in the site's own database, so a site is a plain clone of this repo
+plus that configuration (setup steps in the README; feature work is never
+site-specific). The content system (**pages** with page groups, dynamic
+URLs and a dynamic menu — admin CRUD included, see §6), authentication,
+user management and the Dutch localization are in place; §9 lists what is
+not. Until a site goes live its public side is hidden behind a
+placeholder — see §2.
 
 ## 2. Architecture & environment
 
-- Runs as its own container **`php_magnesium`** (php:8.5-apache) behind the
-  shared **Caddy** from the sibling repo `../DockerServer` (checked out next
-  to this repo on every machine).
-- The shared Caddy does `import /apps/*/docker/caddy/Caddyfile`; our
-  `docker/caddy/Caddyfile` reverse-proxies `magnesiumengezondheid.nl` (prod)
-  and `magnesium.local` (dev) to `php_magnesium:80`. Apache serves Laravel
-  from `public/`.
+- Runs as its own container (php:8.5-apache) behind the shared **Caddy**
+  from the sibling repo `../DockerServer` (checked out next to this repo on
+  every machine). The container name — also used as image tag and hostname —
+  comes from **`APP_CONTAINER`** in `.env` (default `php_cms`): Compose
+  interpolates the same `.env` Laravel reads, and `develop`/`deploy` read the
+  variable too, so one value keeps compose, the scripts and the site
+  Caddyfile in sync.
+- The shared Caddy does `import /apps/*/docker/caddy/Caddyfile`. That file
+  is **per site and untracked** (like `.env`, the one bit of site config
+  `.env` cannot carry — Caddy never reads it): each machine copies
+  `docker/caddy/Caddyfile.example` to `docker/caddy/Caddyfile` and fills in
+  its domains and the `APP_CONTAINER` value. Snippet names in it must be
+  unique across every site the shared Caddy imports, since the import
+  inlines all sites into one config. Apache serves Laravel from `public/`.
 - TLS terminates at Caddy; Laravel trusts its `X-Forwarded-*` headers via
   `trustProxies(at: '*')` in `bootstrap/app.php` (safe: the container is
   only reachable through the internal Docker network). Without it Laravel
   generates `http://` asset/route URLs and the browser blocks them as
   mixed content — no JS runs at all.
-- Database: shared **MariaDB** (`mariadb_docker_server`), own database
-  `magnesium`, user `magnesium`. Reachable only within the
-  `docker_server_database` network, not from the host. Laravel reads the
-  credentials from `.env` (`DB_*`).
-- **Least privilege on prod**: the app user `magnesium` only has
-  SELECT/INSERT/UPDATE/DELETE; DDL (migrations) runs as a separate user
-  `magnesium_migrate` via the `mariadb_migrations` connection
+- Database: shared **MariaDB** (`mariadb_docker_server`), own database and
+  user per site. Reachable only within the `docker_server_database`
+  network, not from the host. Laravel reads the credentials from `.env`
+  (`DB_*`).
+- **Least privilege on prod**: the site's app user only has
+  SELECT/INSERT/UPDATE/DELETE; DDL (migrations) runs as a separate
+  per-site user via the `mariadb_migrations` connection
   (`config/database.php`), fed by `DB_MIGRATIONS_USERNAME`/`_PASSWORD` in
   prod's `.env`. `./develop checkout` and `./deploy` pass
   `--database=mariadb_migrations` to `artisan migrate` — do the same for
@@ -105,8 +117,8 @@ visitors get a raw **500** for the whole deploy (measured 2026-08-06):
   hatch.
 - Not covered: the few seconds of `docker compose down` → `up -d`, where there
   is no PHP at all and Caddy answers **502**. Closing that too would need a
-  `handle_errors` block in `docker/caddy/Caddyfile` (Caddy mounts the repo at
-  `/apps/magnesium:ro`) — not done, same trade-off as jeroendn-website.
+  `handle_errors` block in `docker/caddy/Caddyfile` (Caddy mounts the repo
+  read-only under `/apps/`) — not done, same trade-off as jeroendn-website.
 
 ### Under construction (temporary)
 
@@ -157,7 +169,7 @@ reads its `noindex` either. What keeps the non-public pages out is
 `php`, `composer`, `artisan`, `npm`, `phpunit` and migrations **ALWAYS
 execute in the container**, never on the host. The **`./develop` wrapper is
 the front door**: it auto-detects context and forwards dev commands into
-`php_magnesium`. Anything it doesn't recognize is passed straight to
+the app container. Anything it doesn't recognize is passed straight to
 `docker compose`:
 
 ```bash
@@ -351,10 +363,12 @@ the front door**: it auto-detects context and forwards dev commands into
   ends on the public home — you are a guest by then. Laravel's
   `redirect()->intended()` keeps priority throughout, so being bounced off
   an admin page still returns you to that page.
-- The first admin (`info@jeroendn.nl`) is bootstrapped by a **data
-  migration** (`2026_08_06_084152_create_admin_user`) without a usable
-  password (random hash — the column is not nullable); the admin gains
-  access via the password-reset flow. In dev (`MAIL_MAILER=log`) the reset
+- The first admin (**`ADMIN_EMAIL`** in `.env`, read through
+  `config('app.admin_email')` — never `env()`, which is null under prod's
+  cached config; migrating with it unset aborts with a clear message) is
+  bootstrapped by a **data migration** (`2026_08_06_084152_create_admin_user`)
+  without a usable password (random hash — the column is not nullable); the
+  admin gains access via the password-reset flow. In dev (`MAIL_MAILER=log`) the reset
   link lands in `storage/logs/laravel.log`; prod needs working `MAIL_*`
   settings in `.env` before the reset mail can arrive.
 ### User management
