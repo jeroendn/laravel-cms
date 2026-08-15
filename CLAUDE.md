@@ -39,10 +39,13 @@ is hidden behind a placeholder — see §2.
   interpolates the same `.env` Laravel reads, and `develop`/`deploy` read the
   variable too, so one value keeps compose, the scripts and the site
   Caddyfile in sync.
-- The shared Caddy does `import /apps/*/docker/caddy/Caddyfile`; our
-  `docker/caddy/Caddyfile` reverse-proxies `magnesiumengezondheid.nl` (prod)
-  and `magnesium.local` (dev) to `php_magnesium:80`. Apache serves Laravel
-  from `public/`.
+- The shared Caddy does `import /apps/*/docker/caddy/Caddyfile`. That file
+  is **per site and untracked** (like `.env`, the one bit of site config
+  `.env` cannot carry — Caddy never reads it): each machine copies
+  `docker/caddy/Caddyfile.example` to `docker/caddy/Caddyfile` and fills in
+  its domains and the `APP_CONTAINER` value. Snippet names in it must be
+  unique across every site the shared Caddy imports, since the import
+  inlines all sites into one config. Apache serves Laravel from `public/`.
 - TLS terminates at Caddy; Laravel trusts its `X-Forwarded-*` headers via
   `trustProxies(at: '*')` in `bootstrap/app.php` (safe: the container is
   only reachable through the internal Docker network). Without it Laravel
@@ -109,8 +112,8 @@ visitors get a raw **500** for the whole deploy (measured 2026-08-06):
   hatch.
 - Not covered: the few seconds of `docker compose down` → `up -d`, where there
   is no PHP at all and Caddy answers **502**. Closing that too would need a
-  `handle_errors` block in `docker/caddy/Caddyfile` (Caddy mounts the repo at
-  `/apps/magnesium:ro`) — not done, same trade-off as jeroendn-website.
+  `handle_errors` block in `docker/caddy/Caddyfile` (Caddy mounts the repo
+  read-only under `/apps/`) — not done, same trade-off as jeroendn-website.
 
 ### Under construction (temporary)
 

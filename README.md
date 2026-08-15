@@ -15,8 +15,8 @@ Client website with page management, built with [Laravel](https://laravel.com) a
 - **MariaDB** — the shared `mariadb_docker_server` from the sibling
   [DockerServer](../DockerServer) repo, own database `magnesium`
 - **Caddy** — the shared DockerServer Caddy imports
-  `docker/caddy/Caddyfile` and proxies `magnesium.local` (dev) to this
-  container
+  `docker/caddy/Caddyfile`, a per-site untracked file created from
+  `docker/caddy/Caddyfile.example`
 
 ## Development
 
@@ -35,8 +35,10 @@ All PHP/composer/npm tooling runs **in the container**, never on the host.
 First-time setup: copy `.env.example` to `.env`, fill in `DB_PASSWORD`
 and the `DB_MIGRATIONS_*` vars — in dev those repeat the regular
 `DB_USERNAME`/`DB_PASSWORD` values (database and user must exist in the
-shared MariaDB), then `./develop checkout`. Add `magnesium.local` to your
-hosts file and restart the DockerServer stack once so Caddy picks up the
+shared MariaDB), then `./develop checkout`. Copy
+`docker/caddy/Caddyfile.example` to `docker/caddy/Caddyfile`, fill in your
+local domain and the `APP_CONTAINER` value, add that domain to your hosts
+file and restart the DockerServer stack once so Caddy picks up the
 imported Caddyfile.
 
 ## The app

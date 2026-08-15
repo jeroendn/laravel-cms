@@ -1,0 +1,19 @@
+(defaults_mysite) {
+    reverse_proxy php_cms:80
+}
+
+mysite.example {
+    import defaults_mysite
+
+    tls {
+        on_demand
+    }
+}
+
+mysite.local {
+    import defaults_mysite
+
+    tls internal {
+        on_demand
+    }
+}
