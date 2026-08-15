@@ -17,7 +17,7 @@ This file is loaded automatically as context.
 > cases and gotchas belong here — do not restate them there. When in doubt,
 > leave the README alone.
 >
-> Last updated: 2026-08-13
+> Last updated: 2026-08-15
 
 ---
 
@@ -32,9 +32,13 @@ is hidden behind a placeholder — see §2.
 
 ## 2. Architecture & environment
 
-- Runs as its own container **`php_magnesium`** (php:8.5-apache) behind the
-  shared **Caddy** from the sibling repo `../DockerServer` (checked out next
-  to this repo on every machine).
+- Runs as its own container (php:8.5-apache) behind the shared **Caddy**
+  from the sibling repo `../DockerServer` (checked out next to this repo on
+  every machine). The container name — also used as image tag and hostname —
+  comes from **`APP_CONTAINER`** in `.env` (default `php_cms`): Compose
+  interpolates the same `.env` Laravel reads, and `develop`/`deploy` read the
+  variable too, so one value keeps compose, the scripts and the site
+  Caddyfile in sync.
 - The shared Caddy does `import /apps/*/docker/caddy/Caddyfile`; our
   `docker/caddy/Caddyfile` reverse-proxies `magnesiumengezondheid.nl` (prod)
   and `magnesium.local` (dev) to `php_magnesium:80`. Apache serves Laravel
@@ -157,7 +161,7 @@ reads its `noindex` either. What keeps the non-public pages out is
 `php`, `composer`, `artisan`, `npm`, `phpunit` and migrations **ALWAYS
 execute in the container**, never on the host. The **`./develop` wrapper is
 the front door**: it auto-detects context and forwards dev commands into
-`php_magnesium`. Anything it doesn't recognize is passed straight to
+the app container. Anything it doesn't recognize is passed straight to
 `docker compose`:
 
 ```bash

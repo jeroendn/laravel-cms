@@ -6,7 +6,8 @@ Client website with page management, built with [Laravel](https://laravel.com) a
 
 ## Stack
 
-- **Laravel 13** (PHP 8.5, `php_magnesium` container, php:8.5-apache)
+- **Laravel 13** (PHP 8.5, php:8.5-apache container — name set via
+  `APP_CONTAINER` in `.env`)
 - **Tabler** (Bootstrap 5), bundled by Vite from `resources/css/app.css`
 - **Font Awesome Free 7** for icons (solid style only)
 - **Quill** WYSIWYG editor, output sanitized with HTMLPurifier
@@ -84,8 +85,11 @@ A **failed** deploy leaves the site in maintenance mode on purpose. Fix the
 cause and re-run `./deploy`, or force it back online:
 
 ```bash
-sudo docker exec -it php_magnesium php artisan up
+sudo docker exec -it <app-container> php artisan up
 ```
+
+(the failed deployment's output prints the exact command with the container
+name filled in)
 
 In prod's `.env` the `DB_MIGRATIONS_USERNAME`/`DB_MIGRATIONS_PASSWORD`
 vars hold a dedicated DDL user: migrations run as that user, while the
