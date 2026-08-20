@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrackActivity;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,8 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // internal Docker network.
         $middleware->trustProxies(at: '*');
 
-        // Last in the group: the session is started by then, so the user
-        // resolves on every page, public site included.
+        // Both need the session, which the web group starts before it gets
+        // here: SetLocale reads the visitor's language choice out of it, and
+        // TrackActivity needs the user it resolves — on the public site too.
+        $middleware->appendToGroup('web', SetLocale::class);
         $middleware->appendToGroup('web', TrackActivity::class);
 
         $middleware->redirectUsersTo(fn(): string => route('admin.dashboard'));

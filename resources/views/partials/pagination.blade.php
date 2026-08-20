@@ -1,5 +1,5 @@
 @if ($paginator->hasPages())
-    <nav aria-label="{{ __('Pagination') }}">
+    <nav aria-label="{{ __('Page navigation') }}">
         <ul class="pagination">
             <li class="page-item {{ $paginator->previousPageUrl() ? '' : 'disabled' }}">
                 <a class="page-link" href="{{ $paginator->previousPageUrl() ?? '#' }}"

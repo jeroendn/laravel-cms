@@ -5,6 +5,7 @@ namespace App\Providers;
 use Override;
 use App\Models\Page;
 use App\Models\PageGroup;
+use App\Models\Setting;
 use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
@@ -19,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
-        //
+        $this->app->scoped(Setting::class, fn(): Setting => Setting::query()->first() ?? new Setting());
     }
 
     /**
@@ -27,8 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Blade formats dates with translatedFormat(); Carbon does not pick
-        // up the app locale by itself.
+        // Baseline for anything outside a request (console, mail); the
+        // SetLocale middleware overrides both locales per request.
         Carbon::setLocale(config()->string('app.locale'));
 
         Blade::if('adminArea', fn(): bool => request()->routeIs('admin.*'));

@@ -1,4 +1,4 @@
-<li class="nav-item dropdown ms-md-auto">
+<li class="nav-item dropdown nav-item-trailing">
     <a href="#" class="nav-link d-flex align-items-center" data-bs-toggle="dropdown"
        role="button" aria-expanded="false" aria-label="{{ __('Open user menu') }}">
         <span class="avatar avatar-sm">

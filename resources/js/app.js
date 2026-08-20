@@ -114,6 +114,22 @@ if (urlPreview) {
     sync();
 }
 
+// The settings form's color picker, paired with a text field so a brand hex
+// can be pasted. Only the picker is submitted; the text field feeds it.
+const colorInput = document.getElementById('primary_color');
+const colorHexInput = document.getElementById('primary_color_hex');
+
+if (colorInput && colorHexInput) {
+    colorInput.addEventListener('input', () => colorHexInput.value = colorInput.value);
+    colorHexInput.addEventListener('input', () => {
+        const hex = colorHexInput.value.trim().replace(/^#?/, '#');
+
+        if (/^#[0-9a-f]{6}$/i.test(hex)) {
+            colorInput.value = hex.toLowerCase();
+        }
+    });
+}
+
 // WYSIWYG editor for the admin page form. The toolbar is icon-only, so it
 // involves no translatable copy.
 const editorElement = document.getElementById('body-editor');

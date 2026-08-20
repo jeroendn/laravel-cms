@@ -1,3 +1,4 @@
+@use('App\Models\Setting')
 @use('App\Support\Breadcrumbs')
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -16,12 +17,12 @@
 
                 @adminArea
                     <a href="{{ route('admin.dashboard') }}" class="navbar-brand me-auto">
-                        <span class="d-none d-md-inline">{{ config('app.name') }}</span>
+                        <span class="d-none d-md-inline">{{ Setting::current()->name() }}</span>
                         <span class="badge bg-warning text-dark ms-md-2">{{ __('Admin area') }}</span>
                     </a>
                 @else
                     <a href="{{ route('home') }}" class="navbar-brand me-auto">
-                        {{ config('app.name') }}
+                        {{ Setting::current()->name() }}
                     </a>
                 @endadminArea
             </div>
@@ -38,9 +39,17 @@
                                 @include('partials.nav-public')
                             @endadminArea
 
+                            @include('partials.nav-language')
+
                             @auth
                                 @include('partials.nav-account')
                             @endauth
+
+                            @guest
+                                @if (Setting::current()->show_login_link)
+                                    @include('partials.nav-login')
+                                @endif
+                            @endguest
                         </ul>
                     </div>
                 </div>
@@ -62,7 +71,7 @@
 
             <footer class="footer d-print-none">
                 <div class="container-xl">
-                    <div class="text-secondary">&copy; {{ date('Y') }} {{ config('app.name') }}</div>
+                    <div class="text-secondary">&copy; {{ date('Y') }} {{ Setting::current()->name() }}</div>
                 </div>
             </footer>
         </div>
