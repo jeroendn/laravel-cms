@@ -12,13 +12,13 @@
    foreground instead of Tabler's white. Everything else (hover, subtle
    backgrounds, focus rings) is color-mixed from these by Tabler itself. */
 :root {
-    --tblr-primary: #0f766e;
-    --tblr-primary-rgb: 15, 118, 110;
+    --tblr-primary: #750f2e;
+    --tblr-primary-rgb: 117, 15, 46;
 }
 
 [data-bs-theme=dark] {
-    --tblr-primary: #14b8a6;
-    --tblr-primary-rgb: 20, 184, 166;
+    --tblr-primary: #da6f81;
+    --tblr-primary-rgb: 218, 111, 129;
     --tblr-primary-fg: var(--tblr-gray-900);
 }
 

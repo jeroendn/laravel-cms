@@ -22,7 +22,7 @@ use Illuminate\Support\Carbon;
 class Setting extends Model
 {
     /** The value app.css ships with; see Theme::primaryStyle(). */
-    public const string DEFAULT_PRIMARY_COLOR = '#0f766e';
+    public const string DEFAULT_PRIMARY_COLOR = '#750f2e';
 
     /**
      * Mirrors the migration's column defaults, for the unsaved instance

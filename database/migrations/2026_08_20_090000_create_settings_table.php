@@ -11,7 +11,7 @@ return new class extends Migration {
         Schema::create('settings', function (Blueprint $table): void {
             $table->id();
             $table->string('site_name')->nullable();
-            $table->string('primary_color', 7)->default('#0f766e');
+            $table->string('primary_color', 7)->default('#750f2e');
             $table->boolean('under_construction')->default(true);
             $table->boolean('show_login_link')->default(false);
             $table->json('locales');

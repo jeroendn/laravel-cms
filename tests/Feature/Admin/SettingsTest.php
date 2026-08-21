@@ -151,7 +151,7 @@ class SettingsTest extends TestCase
     {
         return [
             'site_name' => 'The Dreaming',
-            'primary_color' => '#0f766e',
+            'primary_color' => '#750f2e',
             'locales' => ['en'],
             'default_locale' => 'en',
             ...$overrides,
