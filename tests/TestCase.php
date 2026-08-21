@@ -3,9 +3,9 @@
 namespace Tests;
 
 use Override;
-use App\Models\Setting;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -21,11 +21,10 @@ abstract class TestCase extends BaseTestCase
         $this->withoutVite();
 
         // The migration seeds a fresh site as under construction, which would
-        // answer 503 to every public page a test asks for.
-        // UnderConstructionTest turns it back on where that is the point.
-        // Guarded: the tests without RefreshDatabase have no tables at all.
-        if (Schema::hasTable('settings')) {
-            Setting::current()->update(['under_construction' => false]);
+        // 503 every public page a test asks for; UnderConstructionTest turns
+        // it back on. Without RefreshDatabase there are no tables at all.
+        if (in_array(RefreshDatabase::class, class_uses_recursive($this), true)) {
+            DB::table('settings')->update(['under_construction' => false]);
         }
     }
 }

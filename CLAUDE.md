@@ -17,7 +17,7 @@ This file is loaded automatically as context.
 > cases and gotchas belong here — do not restate them there. When in doubt,
 > leave the README alone.
 >
-> Last updated: 2026-08-20
+> Last updated: 2026-08-21
 
 ---
 
@@ -320,9 +320,10 @@ the app container. Anything it doesn't recognize is passed straight to
   `partials/nav-language.blade.php` posts to `POST /language/{locale}`
   (`LanguageController`), which stores the choice in the session. A POST, so
   every page keeps one URL and there are no duplicate-content variants —
-  only the chrome translates, page content stays as it was typed. That route
-  also makes `language` a reserved root slug for free (`NotAReservedSlug`
-  reads the route table).
+  only the chrome translates, page content stays as it was typed. Being
+  POST-only, it does **not** reserve `language` as a root slug — see §6.
+  The placeholder (§2) carries no switcher at all: it renders in the site's
+  default language, since it has no navbar to hang one on.
 - ⚠️ **Never use a JSON key that matches a `lang/<locale>/<name>.php` group
   file** — `actions`, `auth`, `http-statuses`, `pagination`, `passwords`,
   `validation`. On a JSON miss Laravel falls through to the group loader, so
@@ -490,7 +491,10 @@ the app container. Anything it doesn't recognize is passed straight to
   pages, root groups) also must not shadow an application route:
   `App\Rules\NotAReservedSlug` derives the reserved list from the route
   table (literal first path segments), so new app routes are covered
-  automatically. `home` is excepted for pages — that slug becomes the
+  automatically. **GET routes only**: a page is reachable by GET, so a route
+  answering another verb cannot shadow it — `POST /language/{locale}` would
+  otherwise have made an existing page slugged `language` unsaveable while
+  its URL kept working. `home` is excepted for pages — that slug becomes the
   home page and is served by the application itself at `/`. Grouped
   pages and subgroups never occupy a first URL segment and skip the rule.
 - **Public URLs are dynamic**: `/{slug}` is an ungrouped page or a root
@@ -616,11 +620,17 @@ Languages.
   reviewable record of the change. `locales` is the one `json` column,
   because that setting genuinely is a list.
 - **The row is part of the schema.** The migration seeds it (like
-  `create_admin_user`) from the column defaults: `#0f766e`, English,
-  `under_construction` **on**. `locales` is spelled out in the insert — a
+  `create_admin_user`) from the column defaults: `#750f2e`,
+  `under_construction` **on**. The language is the exception — it is seeded
+  from **`config('app.locale')`**, not from a fixed `en`: `SetLocale` reads
+  the row instead of `APP_LOCALE` from here on, so a hardcoded default would
+  silently flip every existing non-English site to English on the deploy that
+  adds this table. `locales` is spelled out in the insert either way — a
   JSON column takes no `DEFAULT` clause. `site_name` is the only nullable
   one: null means "fall back to `config('app.name')`", which is what
-  `Setting::name()` does.
+  `Setting::name()` does. A settings table that never got its row falls back
+  to the model's `$attributes` defaults, `under_construction` included, so a
+  row-less site stays hidden rather than exposed.
 - **`Setting::current()` is memoized per request** through a `scoped`
   binding in `AppServiceProvider` — head, layout, both nav partials and two
   middlewares all read it, and that would otherwise be a query each. A
@@ -633,13 +643,24 @@ Languages.
   as the input's placeholder. `primary_color` is turned into Tabler's
   `--tblr-*` custom properties by `App\Support\Theme::primaryStyle()`, which
   returns **null while the color is the default** — so a stock site keeps the
-  hand-picked light/dark pair in `app.css` byte-for-byte, and that stays the
+  pair in `app.css` (`#750f2e` / `#da6f81`) byte-for-byte, and that stays the
   fallback. Otherwise the head inlines `:root` and `[data-bs-theme=dark]`
-  overrides: `App\Support\Color` raises the dark variant to 40% lightness at
-  the same hue (the relationship `#0f766e` / `#14b8a6` already encoded) and
-  picks `--tblr-primary-fg` from the color's WCAG luminance, so a light
-  primary cannot produce white-on-white buttons. It is escaped with `{{ }}`,
-  not `{!! !!}`: the generated declarations hold no character `e()` touches.
+  overrides built by `App\Support\Color`, a thin wrapper over
+  **spatie/color** (MIT) — the hex/HSL/CIELab conversions and the contrast
+  ratios are all its work, not ours. It is escaped with `{{ }}`, not
+  `{!! !!}`: the generated declarations hold no character `e()` touches.
+- **The dark variant is raised to CIELab `L* 60`, not to an HSL lightness.**
+  HSL lightness is not comparable across hues: at HSL 40% a teal clears 7:1
+  on Tabler's dark body while a crimson of the same "lightness" only reaches
+  2.8:1, and anything already above 40% (`#7c3aed`, `#b91c1c`, `#1d4ed8`) is
+  passed through untouched at ~3:1. `L*` tracks perceived brightness, so one
+  number holds — measured 2026-08-21, every hue tried lands within 5.8:1 -
+  6.0:1. `ColorTest` pins both that spread and the default pair.
+  `--tblr-primary-fg` follows `Contrast::ratio()` against black and white, so
+  a light primary cannot produce white-on-white buttons. **Only the dark side
+  is guarded**: nothing lowers a too-light primary for the *light* body,
+  where the primary is also the link color — that is left to whoever picks
+  the color.
 - **Access** carries `under_construction` (§2) and `show_login_link`, which
   adds `partials/nav-login.blade.php` to the menu for guests. **Languages**
   is described in §4.
@@ -668,7 +689,7 @@ Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
 database. They are the default level here — almost everything is
 framework-coupled and best tested over HTTP.
 `tests/Unit/` is only for pure logic (`PageTest`: `Page::excerpt()` and
-the `isPublished()` boundaries; `ColorTest`: the primary-color math); it
+the `isPublished()` boundaries; `ColorTest`: the primary-color derivation); it
 still extends `Tests\TestCase`
 (the container is needed for the Purify facade) but skips
 `RefreshDatabase`, since nothing is persisted.

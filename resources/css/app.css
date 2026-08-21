@@ -6,11 +6,6 @@
 @import '@fortawesome/fontawesome-free/css/fontawesome.css';
 @import '@fortawesome/fontawesome-free/css/solid.css';
 
-/* Tabler maps --tblr-link-color onto --tblr-primary, so the primary doubles as
-   link text. The dark variant exists because the light one only reaches 3.2:1
-   on the dark body; being that much lighter, it in turn needs a dark button
-   foreground instead of Tabler's white. Everything else (hover, subtle
-   backgrounds, focus rings) is color-mixed from these by Tabler itself. */
 :root {
     --tblr-primary: #750f2e;
     --tblr-primary-rgb: 117, 15, 46;

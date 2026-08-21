@@ -114,19 +114,26 @@ if (urlPreview) {
     sync();
 }
 
-// The settings form's color picker, paired with a text field so a brand hex
-// can be pasted. Only the picker is submitted; the text field feeds it.
+// The settings form's color picker feeds the text field next to it, which is
+// the one that submits — an unparseable value reaches the server that way.
 const colorInput = document.getElementById('primary_color');
-const colorHexInput = document.getElementById('primary_color_hex');
+const colorPicker = document.getElementById('primary_color_picker');
 
-if (colorInput && colorHexInput) {
-    colorInput.addEventListener('input', () => colorHexInput.value = colorInput.value);
-    colorHexInput.addEventListener('input', () => {
-        const hex = colorHexInput.value.trim().replace(/^#?/, '#');
+if (colorInput && colorPicker) {
+    colorPicker.addEventListener('input', () => {
+        colorInput.value = colorPicker.value;
+        colorInput.classList.remove('is-invalid');
+    });
 
-        if (/^#[0-9a-f]{6}$/i.test(hex)) {
-            colorInput.value = hex.toLowerCase();
+    colorInput.addEventListener('input', () => {
+        const hex = colorInput.value.trim();
+        const parsed = /^#?([0-9a-f]{6})$/i.exec(hex);
+
+        if (parsed) {
+            colorPicker.value = `#${parsed[1].toLowerCase()}`;
         }
+
+        colorInput.classList.toggle('is-invalid', !parsed);
     });
 }
 

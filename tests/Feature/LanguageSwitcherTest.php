@@ -48,15 +48,17 @@ class LanguageSwitcherTest extends TestCase
         $this->post(route('language.switch', 'nl'))->assertNotFound();
     }
 
-    /** The placeholder is translated too, so the switcher has to work behind it. */
-    public function testSwitchingWorksWhileUnderConstruction(): void
+    /** The placeholder renders no navbar, so it offers no switcher either. */
+    public function testThePlaceholderIsShownInTheDefaultLanguage(): void
     {
         $this->offerBoth();
-        Setting::current()->update(['under_construction' => true]);
+        Setting::current()->update(['default_locale' => 'nl', 'under_construction' => true]);
 
-        $this->post(route('language.switch', 'nl'))->assertSessionHas('locale', 'nl');
+        $response = $this->get(route('home'));
 
-        $this->get(route('home'))->assertSee('Deze website is nog in aanbouw');
+        $response->assertServiceUnavailable();
+        $response->assertSee('Deze website is nog in aanbouw');
+        $response->assertDontSee(route('language.switch', 'nl'));
     }
 
     private function offerBoth(): void

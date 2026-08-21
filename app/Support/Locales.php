@@ -29,8 +29,8 @@ class Locales
 
     /**
      * The locales the site currently offers, in the order above. Never empty:
-     * a settings row naming none at all falls back to the site's own locale,
-     * which leaves the switcher hidden.
+     * a settings row naming none the app ships falls back to the first
+     * language above, which leaves the switcher hidden.
      *
      * @return non-empty-list<string>
      */
@@ -38,11 +38,7 @@ class Locales
     {
         $enabled = array_values(array_intersect(array_keys(self::AVAILABLE), Setting::current()->locales));
 
-        if ($enabled === []) {
-            return [self::configured()];
-        }
-
-        return $enabled;
+        return $enabled === [] ? [(string) array_key_first(self::AVAILABLE)] : $enabled;
     }
 
     /**
@@ -68,12 +64,15 @@ class Locales
     }
 
     /**
-     * The settings' default locale, narrowed to one the app ships.
+     * The language a fresh install starts out in. Seeding a fixed 'en' would
+     * flip every existing site to English on the deploy that adds the
+     * settings row, since SetLocale reads that row instead of APP_LOCALE
+     * from there on.
      */
-    private static function configured(): string
+    public static function configuredDefault(): string
     {
-        $default = Setting::current()->default_locale;
+        $locale = config()->string('app.locale');
 
-        return isset(self::AVAILABLE[$default]) ? $default : (string) array_key_first(self::AVAILABLE);
+        return isset(self::AVAILABLE[$locale]) ? $locale : (string) array_key_first(self::AVAILABLE);
     }
 }

@@ -3,35 +3,27 @@
 namespace Tests\Unit;
 
 use App\Support\Color;
+use Spatie\Color\Hex;
 use Tests\TestCase;
 
 class ColorTest extends TestCase
 {
     public function testHexSurvivesTheRoundTrip(): void
     {
-        $this->assertSame('#0f766e', Color::fromHex('#0f766e')->hex());
-        $this->assertSame('#0f766e', Color::fromHex('0F766E')->hex());
+        $this->assertSame('#750f2e', Color::fromHex('#750f2e')->hex());
+        $this->assertSame('#750f2e', Color::fromHex('750F2E')->hex());
     }
 
     public function testRgbIsTheTripleTablerWants(): void
     {
-        $this->assertSame('15, 118, 110', Color::fromHex('#0f766e')->rgb());
+        $this->assertSame('117, 15, 46', Color::fromHex('#750f2e')->rgb());
     }
 
-    /**
-     * The rule was read off app.css's hand-picked pair, so the derived value
-     * has to land on #14b8a6 give or take a rounding step. A real drift means
-     * the rule stopped describing that pair.
-     */
-    public function testTheDarkVariantMatchesTheHandPickedPair(): void
+    /** app.css ships this pair by hand; a change to either side needs both. */
+    public function testTheDarkVariantMatchesThePairInAppCss(): void
     {
-        $dark = Color::fromHex('#0f766e')->forDarkTheme();
-
-        foreach ([0 => 0x14, 1 => 0xb8, 2 => 0xa6] as $index => $expected) {
-            $actual = (int) hexdec(substr($dark->hex(), 1 + $index * 2, 2));
-
-            $this->assertLessThanOrEqual(4, abs($actual - $expected), $dark->hex());
-        }
+        $this->assertSame('#da6f81', Color::fromHex('#750f2e')->forDarkTheme()->hex());
+        $this->assertSame('218, 111, 129', Color::fromHex('#750f2e')->forDarkTheme()->rgb());
     }
 
     public function testAlreadyLightColorsAreLeftAlone(): void
@@ -39,20 +31,27 @@ class ColorTest extends TestCase
         $this->assertSame('#7dd3fc', Color::fromHex('#7dd3fc')->forDarkTheme()->hex());
     }
 
-    /** The achromatic path: no hue to preserve, and already at 40% lightness. */
-    public function testGreyIsUnchanged(): void
+    /** Why the lightness is CIELab's: HSL's is not comparable across hues. */
+    public function testEveryHueIsRaisedToTheSamePerceivedLightness(): void
     {
-        $this->assertSame('#666666', Color::fromHex('#666666')->forDarkTheme()->hex());
+        foreach (['#750f2e', '#0f766e', '#7c3aed', '#b91c1c', '#1d4ed8', '#166534'] as $hex) {
+            $lightness = $this->perceivedLightness(Color::fromHex($hex)->forDarkTheme()->hex());
+
+            $this->assertEqualsWithDelta(60.0, $lightness, 1.0, $hex);
+        }
     }
 
     public function testTheForegroundFollowsTheBackground(): void
     {
-        // The current pair: white on the light primary, dark on the lighter
-        // one — which is exactly what app.css sets by hand.
-        $this->assertFalse(Color::fromHex('#0f766e')->needsDarkForeground());
-        $this->assertTrue(Color::fromHex('#14b8a6')->needsDarkForeground());
+        $this->assertFalse(Color::fromHex('#750f2e')->needsDarkForeground());
+        $this->assertTrue(Color::fromHex('#da6f81')->needsDarkForeground());
 
         $this->assertTrue(Color::fromHex('#ffffff')->needsDarkForeground());
         $this->assertFalse(Color::fromHex('#000000')->needsDarkForeground());
+    }
+
+    private function perceivedLightness(string $hex): float
+    {
+        return Hex::fromString($hex)->toCIELab()->l();
     }
 }

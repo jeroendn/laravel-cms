@@ -23,11 +23,7 @@ class SettingController extends Controller
     {
         // fill()->save(), not update(): current() hands back an unsaved row
         // when the settings row is missing, and update() would refuse that.
-        Setting::current()->fill([
-            ...$request->safe(['site_name', 'primary_color', 'locales', 'default_locale']),
-            'under_construction' => $request->boolean('under_construction'),
-            'show_login_link' => $request->boolean('show_login_link'),
-        ])->save();
+        Setting::current()->fill($request->validated())->save();
 
         return redirect()
             ->route('admin.settings.edit')

@@ -27,14 +27,14 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label" for="primary_color">{{ __('Primary color') }}</label>
+                    <label class="form-label required" for="primary_color">{{ __('Primary color') }}</label>
                     <div class="input-group">
-                        <input id="primary_color" type="color" name="primary_color"
+                        <input id="primary_color_picker" type="color" class="form-control form-control-color"
                                value="{{ old('primary_color', $settings->primary_color) }}"
-                               class="form-control form-control-color @error('primary_color') is-invalid @enderror">
-                        <input id="primary_color_hex" type="text" class="form-control" spellcheck="false"
+                               aria-label="{{ __('Pick a color') }}">
+                        <input id="primary_color" type="text" name="primary_color" spellcheck="false"
                                value="{{ old('primary_color', $settings->primary_color) }}"
-                               aria-label="{{ __('Primary color') }}">
+                               class="form-control @error('primary_color') is-invalid @enderror">
                     </div>
                     @error('primary_color')
                         <div class="invalid-feedback d-block">{{ $message }}</div>

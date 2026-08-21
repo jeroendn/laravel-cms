@@ -265,6 +265,19 @@ class AdminPagesTest extends TestCase
         $response->assertSessionHasErrors('slug');
     }
 
+    /** Only a GET route can shadow a page URL; POST /language/{locale} cannot. */
+    public function testASlugMayMatchARouteThatAnswersOnlyOtherVerbs(): void
+    {
+        $response = $this->actingAs($this->admin())->post(route('admin.pages.store'), [
+            'title' => 'Language',
+            'slug' => 'language',
+            'body' => '<p>Content</p>',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('pages', ['slug' => 'language']);
+    }
+
     public function testAGroupedPageMayReuseAReservedSlug(): void
     {
         $group = PageGroup::factory()->create();

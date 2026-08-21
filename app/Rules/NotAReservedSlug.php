@@ -32,8 +32,9 @@ readonly class NotAReservedSlug implements ValidationRule
     }
 
     /**
-     * The literal first path segments of all registered routes; parameter
-     * segments ({slug} etc.) are no reservation.
+     * The literal first path segments of the registered GET routes; parameter
+     * segments ({slug} etc.) are no reservation, and neither is a route that
+     * answers another verb — a page is only reachable by GET.
      *
      * @return list<string>
      */
@@ -43,6 +44,10 @@ readonly class NotAReservedSlug implements ValidationRule
 
         foreach (Route::getRoutes()->getRoutes() as $route) {
             $segment = explode('/', $route->uri())[0];
+
+            if (!in_array('GET', $route->methods(), true)) {
+                continue;
+            }
 
             if ($segment !== '' && !str_starts_with($segment, '{')) {
                 $segments[] = $segment;

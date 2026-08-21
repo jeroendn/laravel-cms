@@ -43,13 +43,9 @@
 
                             @auth
                                 @include('partials.nav-account')
+                            @elseif (Setting::current()->show_login_link)
+                                @include('partials.nav-login')
                             @endauth
-
-                            @guest
-                                @if (Setting::current()->show_login_link)
-                                    @include('partials.nav-login')
-                                @endif
-                            @endguest
                         </ul>
                     </div>
                 </div>

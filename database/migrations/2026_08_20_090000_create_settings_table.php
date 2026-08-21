@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\Locales;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -19,8 +20,11 @@ return new class extends Migration {
             $table->timestamps();
         });
 
+        $locale = Locales::configuredDefault();
+
         DB::table('settings')->insert([
-            'locales' => json_encode(['en']),
+            'locales' => json_encode([$locale]),
+            'default_locale' => $locale,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

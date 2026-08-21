@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Setting;
+use App\Support\Locales;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -140,6 +141,56 @@ class SettingsTest extends TestCase
 
         $this->assertTrue(Setting::current()->under_construction);
         $this->get(route('home'))->assertServiceUnavailable();
+    }
+
+    /** A settings table that never got its row falls back to the same defaults. */
+    public function testASiteWithoutASettingsRowFallsBackToTheColumnDefaults(): void
+    {
+        $this->withoutSettingsRow();
+
+        $settings = Setting::current();
+
+        $this->assertFalse($settings->exists);
+        $this->assertSame(config()->string('app.name'), $settings->name());
+        $this->assertSame(Setting::DEFAULT_PRIMARY_COLOR, $settings->primary_color);
+        $this->assertSame(['en'], $settings->locales);
+
+        // under_construction defaults on, so a row-less site stays hidden.
+        $response = $this->get(route('home'));
+
+        $response->assertServiceUnavailable();
+        $response->assertSee(config()->string('app.name'));
+    }
+
+    /** current() hands back an unsaved row then, so saving has to insert one. */
+    public function testSavingInsertsTheRowWhenItIsMissing(): void
+    {
+        $this->withoutSettingsRow();
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('admin.settings.update'), $this->validPayload(['site_name' => 'The Dreaming']));
+
+        $this->assertDatabaseCount('settings', 1);
+        $this->assertSame('The Dreaming', Setting::current()->site_name);
+    }
+
+    /** The seed follows APP_LOCALE, so an existing site keeps its language. */
+    public function testTheSeededLocaleFollowsTheConfiguredOne(): void
+    {
+        $this->assertSame([Locales::configuredDefault()], Setting::current()->locales);
+        $this->assertSame(Locales::configuredDefault(), Setting::current()->default_locale);
+
+        config(['app.locale' => 'nl']);
+        $this->assertSame('nl', Locales::configuredDefault());
+
+        config(['app.locale' => 'de']);
+        $this->assertSame('en', Locales::configuredDefault());
+    }
+
+    private function withoutSettingsRow(): void
+    {
+        DB::table('settings')->delete();
+        app()->forgetInstance(Setting::class);
     }
 
     /**
