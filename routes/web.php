@@ -3,7 +3,9 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PageGroupController as AdminPageGroupController;
+use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\PageController;
 use App\Http\Middleware\NoIndex;
 use App\Http\Middleware\UnderConstruction;
@@ -28,7 +30,11 @@ Route::middleware(['auth', NoIndex::class])->prefix('admin')->name('admin.')->gr
     Route::resource('page-groups', AdminPageGroupController::class)->except('show');
     Route::post('users/{user}/reset-link', [AdminUserController::class, 'resetLink'])->name('users.reset-link');
     Route::resource('users', AdminUserController::class)->except('show');
+    Route::get('settings', [AdminSettingController::class, 'edit'])->name('settings.edit');
+    Route::put('settings', [AdminSettingController::class, 'update'])->name('settings.update');
 });
+
+Route::post('language/{locale}', LanguageController::class)->name('language.switch');
 
 Route::middleware(UnderConstruction::class)->group(function (): void {
     Route::get('/', [PageController::class, 'home'])->name('home');

@@ -114,6 +114,29 @@ if (urlPreview) {
     sync();
 }
 
+// The settings form's color picker feeds the text field next to it, which is
+// the one that submits — an unparseable value reaches the server that way.
+const colorInput = document.getElementById('primary_color');
+const colorPicker = document.getElementById('primary_color_picker');
+
+if (colorInput && colorPicker) {
+    colorPicker.addEventListener('input', () => {
+        colorInput.value = colorPicker.value;
+        colorInput.classList.remove('is-invalid');
+    });
+
+    colorInput.addEventListener('input', () => {
+        const hex = colorInput.value.trim();
+        const parsed = /^#?([0-9a-f]{6})$/i.exec(hex);
+
+        if (parsed) {
+            colorPicker.value = `#${parsed[1].toLowerCase()}`;
+        }
+
+        colorInput.classList.toggle('is-invalid', !parsed);
+    });
+}
+
 // WYSIWYG editor for the admin page form. The toolbar is icon-only, so it
 // involves no translatable copy.
 const editorElement = document.getElementById('body-editor');

@@ -3,8 +3,8 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use App\Models\Setting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Symfony\Component\HttpFoundation\Response;
 
 class UnderConstruction
@@ -14,7 +14,7 @@ class UnderConstruction
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! App::isProduction() || $request->user() !== null) {
+        if (! Setting::current()->under_construction || $request->user() !== null) {
             return $next($request);
         }
 

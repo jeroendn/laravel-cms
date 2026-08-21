@@ -1,3 +1,4 @@
+@use('App\Models\Setting')
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -8,7 +9,7 @@
     <div class="page page-center">
         <div class="container container-tight py-4">
             <div class="text-center mb-4">
-                <span class="navbar-brand navbar-brand-autodark fs-2">{{ config('app.name') }}</span>
+                <span class="navbar-brand navbar-brand-autodark fs-2">{{ Setting::current()->name() }}</span>
             </div>
 
             <div class="empty">

@@ -6,19 +6,14 @@
 @import '@fortawesome/fontawesome-free/css/fontawesome.css';
 @import '@fortawesome/fontawesome-free/css/solid.css';
 
-/* Tabler maps --tblr-link-color onto --tblr-primary, so the primary doubles as
-   link text. The dark variant exists because the light one only reaches 3.2:1
-   on the dark body; being that much lighter, it in turn needs a dark button
-   foreground instead of Tabler's white. Everything else (hover, subtle
-   backgrounds, focus rings) is color-mixed from these by Tabler itself. */
 :root {
-    --tblr-primary: #0f766e;
-    --tblr-primary-rgb: 15, 118, 110;
+    --tblr-primary: #750f2e;
+    --tblr-primary-rgb: 117, 15, 46;
 }
 
 [data-bs-theme=dark] {
-    --tblr-primary: #14b8a6;
-    --tblr-primary-rgb: 20, 184, 166;
+    --tblr-primary: #da6f81;
+    --tblr-primary-rgb: 218, 111, 129;
     --tblr-primary-fg: var(--tblr-gray-900);
 }
 
@@ -78,6 +73,16 @@
     position: fixed;
     inset: 0;
     z-index: 1090;
+}
+
+@media (min-width: 768px) {
+    .navbar-nav > .nav-item-trailing {
+        margin-inline-start: auto;
+    }
+
+    .navbar-nav > .nav-item-trailing ~ .nav-item-trailing {
+        margin-inline-start: 0;
+    }
 }
 
 /* Flyout submenus in the navbar — Bootstrap 5 has no nested dropdowns.

@@ -34,6 +34,7 @@ class SearchIndexingTest extends TestCase
             'pages' => ['admin.pages.index'],
             'page groups' => ['admin.page-groups.index'],
             'users' => ['admin.users.index'],
+            'settings' => ['admin.settings.edit'],
         ];
     }
 

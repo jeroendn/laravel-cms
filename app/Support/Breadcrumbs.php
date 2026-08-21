@@ -28,6 +28,7 @@ class Breadcrumbs
             'admin.pages.index' => [self::crumb(__('Pages'))],
             'admin.page-groups.index' => [self::crumb(__('Page groups'))],
             'admin.users.index' => [self::crumb(__('Users'))],
+            'admin.settings.edit' => [self::crumb(__('Settings'))],
             default => [],
         };
     }

@@ -11,6 +11,7 @@
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "laravel/ui": "^4.6",
+        "spatie/color": "^2.1",
         "stevebauman/purify": "^6.3"
     },
     "require-dev": {

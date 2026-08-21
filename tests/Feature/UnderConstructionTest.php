@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Page;
 use App\Models\PageGroup;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -12,7 +13,7 @@ class UnderConstructionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testThePublicPagesAreUnaffectedOutsideProduction(): void
+    public function testThePublicPagesAreUnaffectedWhileTheSettingIsOff(): void
     {
         Page::factory()->visible()->create(['title' => 'Season of Mists', 'slug' => 'season-of-mists']);
 
@@ -22,11 +23,11 @@ class UnderConstructionTest extends TestCase
         $response->assertSee('Season of Mists');
     }
 
-    public function testAGuestOnlySeesThePlaceholderOnProduction(): void
+    public function testAGuestOnlySeesThePlaceholderWhileUnderConstruction(): void
     {
         PageGroup::factory()->create(['slug' => 'the-endless']);
         Page::factory()->visible()->create(['title' => 'Season of Mists', 'slug' => 'season-of-mists']);
-        $this->runningOnProduction();
+        $this->underConstruction();
 
         foreach (['/', '/season-of-mists', '/the-endless'] as $url) {
             $response = $this->get($url);
@@ -44,7 +45,7 @@ class UnderConstructionTest extends TestCase
      */
     public function testAnUnknownPathIs404NotThePlaceholder(): void
     {
-        $this->runningOnProduction();
+        $this->underConstruction();
 
         $this->get('/nope')->assertNotFound();
         $this->get('/nope/nope')->assertNotFound();
@@ -54,7 +55,7 @@ class UnderConstructionTest extends TestCase
     /** The health route is registered before the catch-alls can swallow it. */
     public function testTheHealthEndpointStaysReachable(): void
     {
-        $this->runningOnProduction();
+        $this->underConstruction();
 
         $this->get('/up')->assertOk();
     }
@@ -62,7 +63,7 @@ class UnderConstructionTest extends TestCase
     public function testAnAuthenticatedUserStillSeesTheRealSite(): void
     {
         Page::factory()->visible()->create(['title' => 'Season of Mists', 'slug' => 'season-of-mists']);
-        $this->runningOnProduction();
+        $this->underConstruction();
 
         $response = $this->actingAs(User::factory()->create())->get('/season-of-mists');
 
@@ -73,7 +74,7 @@ class UnderConstructionTest extends TestCase
     /** Without a way in, the placeholder would lock out the admin too. */
     public function testAGuestCanStillReachTheLoginPage(): void
     {
-        $this->runningOnProduction();
+        $this->underConstruction();
 
         $this->get(route('login'))->assertOk();
         $this->get(route('password.request'))->assertOk();
@@ -81,7 +82,7 @@ class UnderConstructionTest extends TestCase
 
     public function testTheAdminAreaKeepsWorkingBehindThePlaceholder(): void
     {
-        $this->runningOnProduction();
+        $this->underConstruction();
 
         $response = $this->actingAs(User::factory()->create())->get(route('admin.dashboard'));
 
@@ -91,18 +92,17 @@ class UnderConstructionTest extends TestCase
     /** The placeholder must not be indexed as the site's content. */
     public function testThePlaceholderIsNotIndexable(): void
     {
-        $this->runningOnProduction();
+        $this->underConstruction();
 
         $this->get(route('home'))->assertSee('<meta name="robots" content="noindex">', false);
     }
 
     /**
-     * `App::isProduction()` reads the container's `env` binding, which is
-     * resolved once at boot — setting `config(['app.env' => …])` here would
-     * not reach it.
+     * Tests\TestCase turns the flag off for every test, since the migration
+     * seeds it on; these are the ones that want it on.
      */
-    private function runningOnProduction(): void
+    private function underConstruction(): void
     {
-        $this->app['env'] = 'production';
+        Setting::current()->update(['under_construction' => true]);
     }
 }

@@ -17,7 +17,7 @@ This file is loaded automatically as context.
 > cases and gotchas belong here — do not restate them there. When in doubt,
 > leave the README alone.
 >
-> Last updated: 2026-08-15
+> Last updated: 2026-08-21
 
 ---
 
@@ -31,7 +31,7 @@ and in the site's own database, so a site is a plain clone of this repo
 plus that configuration (setup steps in the README; feature work is never
 site-specific). The content system (**pages** with page groups, dynamic
 URLs and a dynamic menu — admin CRUD included, see §6), authentication,
-user management and the Dutch localization are in place; §9 lists what is
+user management and the localization are in place; §10 lists what is
 not. Until a site goes live its public side is hidden behind a
 placeholder — see §2.
 
@@ -120,29 +120,32 @@ visitors get a raw **500** for the whole deploy (measured 2026-08-06):
   `handle_errors` block in `docker/caddy/Caddyfile` (Caddy mounts the repo
   read-only under `/apps/`) — not done, same trade-off as jeroendn-website.
 
-### Under construction (temporary)
+### Under construction
 
-While the site is being built, `App\Http\Middleware\UnderConstruction`
+While a site is being built, `App\Http\Middleware\UnderConstruction`
 answers guests on the public routes with
-`resources/views/under-construction.blade.php`. It keys off `APP_ENV`
-(`App::isProduction()`) — no separate flag, decided 2026-08-08 — so dev
-and the tests (`APP_ENV=testing`) always show the real pages.
+`resources/views/under-construction.blade.php`. It reads the
+**`under_construction` setting** (§7), which the migration seeds **on**: a
+fresh site stays hidden until its owner launches it from `/admin/settings`.
+It used to key off `APP_ENV` instead (decided 2026-08-08, replaced
+2026-08-20) — a per-environment flag no client could ever lift.
 
 - **503, not 200**, so the placeholder never gets indexed as the site's
   content; the view carries `robots: noindex` on top of that.
 - The middleware sits on the public route group only: `/login` and the
   password reset stay reachable, and any authenticated user sees the whole
-  site again, admin area included. That is the only way in — the public
-  site still shows no login link, an admin types `/login` himself.
+  site again, admin area included. That is the way in — unless the
+  `show_login_link` setting is on the public site advertises no login link,
+  and an admin types `/login` himself.
 - Route middleware runs *after* the web group's `SubstituteBindings`, so
   the catch-all binders (§6) 404 an unknown path before the placeholder
   can answer; `/up` sits outside the group and stays reachable.
-- Prod caches its config (`artisan optimize` in `./deploy`), so `APP_ENV`
-  changes only land with a redeploy.
-- **This has to be removed at launch** — prod stays `APP_ENV=production`
-  forever, so the placeholder does not lift by itself. Delete the
-  middleware + its route group wrapper, the view,
-  `UnderConstructionTest` and the two `lang/nl.json` keys.
+- `Tests\TestCase::setUp()` turns the flag **off** for the whole suite,
+  since the seeded default would 503 every public page a test asks for;
+  `UnderConstructionTest` turns it back on.
+- Living in the database rather than in config, it takes effect at once —
+  prod's cached config (`artisan optimize`) does not freeze it the way it
+  freezes an `.env` value.
 
 ### Search indexing
 
@@ -306,14 +309,41 @@ the app container. Anything it doesn't recognize is passed straight to
 
 - **No hardcoded copy in templates**: user-facing text always goes through
   `__('English text')` — the English string is the key (fleet convention,
-  same as jeroendn-website). `APP_LOCALE=nl` renders Dutch,
-  `APP_FALLBACK_LOCALE=en` makes English work automatically.
+  same as jeroendn-website). **The site's language is a setting, not
+  `APP_LOCALE`** (§7): `App\Support\Locales` holds the offered languages —
+  a deliberately fixed `en`/`nl` map, not a scan of `lang/` — and
+  `App\Http\Middleware\SetLocale` (appended to the `web` group) applies the
+  visitor's choice from the session, falling back to the settings' default.
+  `APP_LOCALE` is only the baseline for console and mail now, and
+  `AppServiceProvider` still seeds `Carbon::setLocale()` from it for those.
+- **Visitors switch language themselves** when more than one is enabled:
+  `partials/nav-language.blade.php` posts to `POST /language/{locale}`
+  (`LanguageController`), which stores the choice in the session. A POST, so
+  every page keeps one URL and there are no duplicate-content variants —
+  only the chrome translates, page content stays as it was typed. Being
+  POST-only, it does **not** reserve `language` as a root slug — see §6.
+  The placeholder (§2) carries no switcher at all: it renders in the site's
+  default language, since it has no navbar to hang one on.
+- ⚠️ **Never use a JSON key that matches a `lang/<locale>/<name>.php` group
+  file** — `actions`, `auth`, `http-statuses`, `pagination`, `passwords`,
+  `validation`. On a JSON miss Laravel falls through to the group loader, so
+  `__('Pagination')` loads `pagination.php` and returns its **whole array**,
+  which blows up in `e()`. **Dev-machine only**: the group name keeps the
+  key's capitals, so it takes a case-insensitive filesystem to resolve
+  `Pagination.php` → `pagination.php` — true for the Windows/macOS bind
+  mount, false on the Linux server and on CI, where the group loads empty
+  and Laravel falls back to the key. Latent since the start, hit the moment
+  English became a real locale (2026-08-20); `partials/pagination.blade.php`
+  therefore says `__('Page navigation')`. `lang/en.json` (generated, see
+  below) intercepts the keys laravel-lang knows before the fallback,
+  `Actions` included.
 - App-specific strings live in `lang/nl.json` (kept alphabetically
   sorted); framework strings in the six `lang/nl/*.php` files (`actions`,
   `auth`, `http-statuses`, `pagination`, `passwords`, `validation`) plus
-  the bulk of `lang/nl.json`, all generated by **laravel-lang**. It also
-  writes `lang/en/*.php`, committed like the rest even though the keys
-  are already English.
+  the bulk of `lang/nl.json`, all generated by **laravel-lang**. It writes
+  the same six `lang/en/*.php` plus `lang/en.json`, committed like the rest
+  even though the keys are already English — English needs its own JSON file
+  for the group-collision reason above.
 - **Reuse laravel-lang's `:name` templates instead of writing one string
   per entity.** `__('Edit :name', ['name' => __('page')])` renders
   "Pagina bewerken" — `:Name` ucfirst's the replacement, so the noun goes
@@ -461,7 +491,10 @@ the app container. Anything it doesn't recognize is passed straight to
   pages, root groups) also must not shadow an application route:
   `App\Rules\NotAReservedSlug` derives the reserved list from the route
   table (literal first path segments), so new app routes are covered
-  automatically. `home` is excepted for pages — that slug becomes the
+  automatically. **GET routes only**: a page is reachable by GET, so a route
+  answering another verb cannot shadow it — `POST /language/{locale}` would
+  otherwise have made an existing page slugged `language` unsaveable while
+  its URL kept working. `home` is excepted for pages — that slug becomes the
   home page and is served by the application itself at `/`. Grouped
   pages and subgroups never occupy a first URL segment and skip the rule.
 - **Public URLs are dynamic**: `/{slug}` is an ungrouped page or a root
@@ -567,20 +600,97 @@ the app container. Anything it doesn't recognize is passed straight to
   `@php /** @var ... */ @endphp` docblock — without it phpstan reports
   both `property.nonObject` (create) and `nullsafe.neverNull` (edit).
 
-## 7. Tests
+## 7. Settings
+
+Site-owner-facing configuration, editable at **`/admin/settings`** (same auth
+group as pages and users, so every authenticated user may change it). One
+form, three cards mirroring the sections of issue #7: Branding, Access,
+Languages.
+
+- **Storage is one table, one row, one typed column per setting**
+  (`settings`, model `App\Models\Setting`) — not a key/value store. The app
+  is analyzed at phpstan level 10 with `@property` docblocks on every model;
+  typed columns keep `Setting::current()->under_construction` a real `bool`,
+  where key/value rows hand back `mixed` at every call site and push a cast
+  plus a null check into each one. Validation then maps 1:1 onto the columns
+  in `UpdateSettingRequest`, exactly like `StorePageRequest` does onto
+  `pages`, and a misspelled column is a fatal error instead of a silent
+  `null`. The usual objection — a migration per new setting — only bites when
+  *users* create settings; here the developer does, and a migration is a
+  reviewable record of the change. `locales` is the one `json` column,
+  because that setting genuinely is a list.
+- **The row is part of the schema.** The migration seeds it (like
+  `create_admin_user`) from the column defaults: `#750f2e`,
+  `under_construction` **on**. The language is the exception — it is seeded
+  from **`config('app.locale')`**, not from a fixed `en`: `SetLocale` reads
+  the row instead of `APP_LOCALE` from here on, so a hardcoded default would
+  silently flip every existing non-English site to English on the deploy that
+  adds this table. `locales` is spelled out in the insert either way — a
+  JSON column takes no `DEFAULT` clause. `site_name` is the only nullable
+  one: null means "fall back to `config('app.name')`", which is what
+  `Setting::name()` does. A settings table that never got its row falls back
+  to the model's `$attributes` defaults, `under_construction` included, so a
+  row-less site stays hidden rather than exposed.
+- **`Setting::current()` is memoized per request** through a `scoped`
+  binding in `AppServiceProvider` — head, layout, both nav partials and two
+  middlewares all read it, and that would otherwise be a query each. A
+  `saved` model event calls `forgetInstance()`, which matters inside feature
+  tests, where one container serves several requests. No `Cache::` layer on
+  top: `CACHE_STORE=database`, so caching a database row in the database
+  buys nothing.
+- **Branding.** `site_name` replaces `config('app.name')` in the header,
+  `<title>`, footer and the placeholder; the form shows the configured name
+  as the input's placeholder. `primary_color` is turned into Tabler's
+  `--tblr-*` custom properties by `App\Support\Theme::primaryStyle()`, which
+  returns **null while the color is the default** — so a stock site keeps the
+  pair in `app.css` (`#750f2e` / `#da6f81`) byte-for-byte, and that stays the
+  fallback. Otherwise the head inlines `:root` and `[data-bs-theme=dark]`
+  overrides built by `App\Support\Color`, a thin wrapper over
+  **spatie/color** (MIT) — the hex/HSL/CIELab conversions and the contrast
+  ratios are all its work, not ours. It is escaped with `{{ }}`, not
+  `{!! !!}`: the generated declarations hold no character `e()` touches.
+- **The dark variant is raised to CIELab `L* 60`, not to an HSL lightness.**
+  HSL lightness is not comparable across hues: at HSL 40% a teal clears 7:1
+  on Tabler's dark body while a crimson of the same "lightness" only reaches
+  2.8:1, and anything already above 40% (`#7c3aed`, `#b91c1c`, `#1d4ed8`) is
+  passed through untouched at ~3:1. `L*` tracks perceived brightness, so one
+  number holds — measured 2026-08-21, every hue tried lands within 5.8:1 -
+  6.0:1. `ColorTest` pins both that spread and the default pair.
+  `--tblr-primary-fg` follows `Contrast::ratio()` against black and white, so
+  a light primary cannot produce white-on-white buttons. **Only the dark side
+  is guarded**: nothing lowers a too-light primary for the *light* body,
+  where the primary is also the link color — that is left to whoever picks
+  the color.
+- **Access** carries `under_construction` (§2) and `show_login_link`, which
+  adds `partials/nav-login.blade.php` to the menu for guests. **Languages**
+  is described in §4.
+- The navbar's trailing items (language, login, account) share one
+  right-alignment rule: `.nav-item-trailing` in `app.css`, whose
+  `margin-inline-start: auto` is reset on every sibling after the first.
+  `ms-md-auto` on each of them would split the free space between them
+  instead.
+- **Not in scope, on purpose:** the *favicon* from issue #7 (it needs the
+  app's first upload backend — `public` disk, `storage:link`, a `./deploy`
+  step), and *Allow registration* (every authenticated user is a full admin,
+  §5, so a public registration toggle would be an admin-account faucet;
+  a separate issue reworks registration first).
+
+## 8. Tests
 
 Feature tests live under `tests/Feature/` (`HomePageTest`, `Auth/LoginTest`,
 `Auth/PasswordResetTest`, `Pages/PublicPagesTest`, `Pages/AdminPagesTest`,
 `Pages/AdminPageGroupsTest`,
-`Admin/DashboardTest`, `Admin/UsersTest`, `ActivityTrackingTest`,
+`Admin/DashboardTest`, `Admin/UsersTest`, `Admin/SettingsTest`,
+`ActivityTrackingTest`, `LanguageSwitcherTest`,
 `NavigationTest`, `MenuTest`, `BreadcrumbsTest`, `LocalizationTest`,
 `AdminUserMigrationTest`, `MaintenancePageTest`, `UnderConstructionTest`,
 `SearchIndexingTest`) and use `RefreshDatabase` on sqlite `:memory:` — except
 `MaintenancePageTest`, which only renders a view and never touches a
 database. They are the default level here — almost everything is
 framework-coupled and best tested over HTTP.
-`tests/Unit/` is only for pure model logic (`PageTest`: `Page::excerpt()`
-and the `isPublished()` boundaries); it still extends `Tests\TestCase`
+`tests/Unit/` is only for pure logic (`PageTest`: `Page::excerpt()` and
+the `isPublished()` boundaries; `ColorTest`: the primary-color derivation); it
+still extends `Tests\TestCase`
 (the container is needed for the Purify facade) but skips
 `RefreshDatabase`, since nothing is persisted.
 New functionality gets feature tests in the same style; keep phpstan level
@@ -600,7 +710,7 @@ run with `Test directory "…" not found` (exit code 2) — green locally, red
 on CI. Either the directory holds a committed test, or its `<testsuite>` is
 removed from `phpunit.xml`.
 
-## 8. Quality gate
+## 9. Quality gate
 
 `./develop cqa` → composer normalize + validate, rector, php-cs-fixer
 (`@auto`), phpstan (level 10, larastan + bladestan, baseline in
@@ -625,14 +735,11 @@ create file … tmp/phpstan/cache/nette.configurator/Container_….php` and
 with `./develop composer phpstan -- --debug`; every parallel run after that
 is green.
 
-## 9. Outstanding
+## 10. Outstanding
 
 Only open work lives here. **Finished items are deleted from this list, not
 ticked off** — what exists is described in the sections above.
 
-- Remove the under-construction placeholder when the site goes live:
-      it is tied to `APP_ENV=production` and will not lift by itself
-      (see §2).
 - Admin dashboard content: `/admin` exists as the landing page of the
       admin area (and the target of its breadcrumb house) but is
       deliberately empty — no widgets decided on yet.
