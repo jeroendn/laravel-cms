@@ -54,7 +54,8 @@
 
         <div class="page-wrapper">
             <div class="page-body">
-                <div class="container-xl">
+                <div class="container-xl"
+                     @unlessadminArea style="width: min(100%, {{ Setting::current()->container_width }}px)" @endadminArea>
                     @include('partials.breadcrumbs', [
                         'breadcrumbs' => Breadcrumbs::current(),
                         'homeUrl' => Breadcrumbs::homeUrl(),

@@ -137,6 +137,15 @@ if (colorInput && colorPicker) {
     });
 }
 
+const containerWidth = document.getElementById('container_width');
+const containerWidthValue = document.getElementById('container_width_value');
+
+if (containerWidth && containerWidthValue) {
+    containerWidth.addEventListener('input', () => {
+        containerWidthValue.value = `${containerWidth.value}px`;
+    });
+}
+
 // WYSIWYG editor for the admin page form. The toolbar is icon-only, so it
 // involves no translatable copy.
 const editorElement = document.getElementById('body-editor');

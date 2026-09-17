@@ -17,7 +17,7 @@ This file is loaded automatically as context.
 > cases and gotchas belong here — do not restate them there. When in doubt,
 > leave the README alone.
 >
-> Last updated: 2026-08-21
+> Last updated: 2026-09-17
 
 ---
 
@@ -661,6 +661,16 @@ Languages.
   is guarded**: nothing lowers a too-light primary for the *light* body,
   where the primary is also the link color — that is left to whoever picks
   the color.
+- **`container_width`** (slider, 720–1320px, default 1320) caps the page-body
+  `container-xl` in `layouts/app.blade.php` **on top of** Tabler's own
+  breakpoint widths: the container never gets wider than stock, only narrower
+  (decided 2026-09-17). It is an inline **`width: min(100%, Npx)`, not a
+  `max-width`**: an inline `max-width` would beat Bootstrap's 1140/1320 steps
+  and widen the content past the header on 1200–1399px screens, the default
+  included. Setting `width` leaves Bootstrap's
+  `max-width` in charge, so the default renders exactly like plain
+  `container-xl`, and the auto margins keep it centered. Skipped in the admin
+  area (`@unlessadminArea`); header and footer are never touched.
 - **Access** carries `under_construction` (§2) and `show_login_link`, which
   adds `partials/nav-login.blade.php` to the menu for guests. **Languages**
   is described in §4.

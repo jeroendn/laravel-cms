@@ -57,7 +57,7 @@ class LanguageSwitcherTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertServiceUnavailable();
-        $response->assertSee('Deze website is nog in aanbouw');
+        $response->assertSee('Deze website is nog onder constructie');
         $response->assertDontSee(route('language.switch', 'nl'));
     }
 

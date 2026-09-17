@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Override;
+use App\Models\Setting;
 use App\Support\Locales;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -47,6 +48,7 @@ class UpdateSettingRequest extends FormRequest
         return [
             'site_name' => ['nullable', 'string', 'max:255'],
             'primary_color' => ['required', 'string', 'hex_color', 'size:7'],
+            'container_width' => ['required', 'integer', 'between:' . Setting::CONTAINER_WIDTH_MIN . ',' . Setting::CONTAINER_WIDTH_MAX],
             'under_construction' => ['boolean'],
             'show_login_link' => ['boolean'],
             'locales' => ['required', 'array', 'min:1'],

@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string|null $site_name
  * @property string $primary_color
+ * @property int $container_width
  * @property bool $under_construction
  * @property bool $show_login_link
  * @property list<string> $locales
@@ -18,11 +19,16 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['site_name', 'primary_color', 'under_construction', 'show_login_link', 'locales', 'default_locale'])]
+#[Fillable(['site_name', 'primary_color', 'container_width', 'under_construction', 'show_login_link', 'locales', 'default_locale'])]
 class Setting extends Model
 {
     /** The value app.css ships with; see Theme::primaryStyle(). */
     public const string DEFAULT_PRIMARY_COLOR = '#750f2e';
+
+    public const int CONTAINER_WIDTH_MIN = 720;
+
+    /** container-xl's own maximum. */
+    public const int CONTAINER_WIDTH_MAX = 1320;
 
     /**
      * Mirrors the migration's column defaults, for the unsaved instance
@@ -33,6 +39,7 @@ class Setting extends Model
     #[Override]
     protected $attributes = [
         'primary_color' => self::DEFAULT_PRIMARY_COLOR,
+        'container_width' => self::CONTAINER_WIDTH_MAX,
         'under_construction' => true,
         'show_login_link' => false,
         'locales' => '["en"]',
@@ -60,6 +67,7 @@ class Setting extends Model
     protected function casts(): array
     {
         return [
+            'container_width' => 'integer',
             'under_construction' => 'boolean',
             'show_login_link' => 'boolean',
             'locales' => 'array',
