@@ -364,6 +364,22 @@ the app container. Anything it doesn't recognize is passed straight to
   framework translations: `./develop artisan lang:update` after a Laravel
   upgrade, or `lang:add <locale>` for an extra language. The generated
   files are committed.
+- **`lang:update` overwrites every value laravel-lang knows, and keeps
+  every key it does not** (verified 2026-09-17 in
+  `Processors/Processor::store()`, which merges over flattened keys). Two
+  framework values in `nl.json` are corrected by hand anyway, keeping
+  laravel/ui's keys in the views: `Forgot Your Password?` → "Wachtwoord
+  vergeten?" (laravel-lang: "Wachtwoord Vergeten?") and `Toggle navigation`
+  → "Menu openen of sluiten" ("Schakel navigatie"). An update puts
+  laravel-lang's versions back, so check the diff for those two afterwards.
+- **Form fields get a name in `attributes`** of `lang/{en,nl}/validation.php`
+  — those extra keys survive an update too. Without one, a Dutch error
+  reads "Container width moet tussen 720 en 1320 zijn." The English file
+  only needs an entry where the label differs from the column name
+  (`container_width` → "page content width"). That is why the two
+  `validation.php` files differ in length; `nl.json` is longer than
+  `en.json` because the app's own strings need no English entry — the key
+  already is the English text.
 
 ## 5. Authentication
 
