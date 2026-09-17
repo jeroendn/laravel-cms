@@ -49,7 +49,6 @@ class MenuTest extends TestCase
 
     public function testAGroupDropdownSortsItsPagesAndEndsWithShowAll(): void
     {
-        app()->setLocale('en');
         $group = PageGroup::factory()->create(['name' => 'The Endless', 'slug' => 'the-endless', 'show_in_menu' => true]);
         Page::factory()->visible()->create([
             'title' => 'A Game of You',
@@ -73,7 +72,6 @@ class MenuTest extends TestCase
 
     public function testAnEmptyMenuGroupStillOffersShowAll(): void
     {
-        app()->setLocale('en');
         PageGroup::factory()->create(['name' => 'Empty group', 'show_in_menu' => true]);
 
         $response = $this->get('/');
@@ -83,7 +81,6 @@ class MenuTest extends TestCase
 
     public function testASubgroupBecomesAFlyoutSubmenu(): void
     {
-        app()->setLocale('en');
         $group = PageGroup::factory()->create(['name' => 'The Endless', 'slug' => 'the-endless', 'show_in_menu' => true]);
         $subgroup = PageGroup::factory()->create([
             'name' => 'Dream',

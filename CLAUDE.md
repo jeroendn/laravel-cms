@@ -736,6 +736,26 @@ run with `Test directory "…" not found` (exit code 2) — green locally, red
 on CI. Either the directory holds a committed test, or its `<testsuite>` is
 removed from `phpunit.xml`.
 
+**`phpunit.xml` pins `APP_LOCALE` and `APP_FALLBACK_LOCALE` to `en`**, like
+it pins the database and the mailer: without them the suite inherits the
+machine's `.env`, and on a site whose own language is Dutch every assertion
+on a translatable string fails — the settings row is seeded from
+`config('app.locale')` (§7) and `SetLocale` applies it to every request.
+Green on CI, which has no `.env`, red on the developer's machine (hit
+2026-09-17, four tests). The fallback is pinned too: a missed key in
+`lang/en.json` would otherwise resolve through `lang/nl.json`. What this
+does *not* cover is a locale exported in the shell around the run
+(`APP_LOCALE=nl composer phpunit`) — that still wins, `force="true"`
+included, because Laravel reads the process environment ahead of both
+`.env` and PHPUnit (measured 2026-09-17). Nobody does that by accident,
+and `.env` was the real trap.
+
+**A test that needs a specific language sets the settings row, never
+`app()->setLocale()`** — `SetLocale` runs inside the request and overwrites
+whatever the test set before it, silently. `LocalizationTest::offering()`
+and `LanguageSwitcherTest` show the shape; the session key (`withSession(['locale' => …])`)
+is the other way in, which is what a visitor does.
+
 ## 9. Quality gate
 
 `./develop cqa` → composer normalize + validate, rector, php-cs-fixer

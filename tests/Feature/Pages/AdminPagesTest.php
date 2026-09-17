@@ -212,7 +212,6 @@ class AdminPagesTest extends TestCase
 
     public function testStatusBadgesDistinguishPublishedScheduledAndDraft(): void
     {
-        app()->setLocale('en');
         $group = PageGroup::factory()->create();
         Page::factory()->visible()->create();
         Page::factory()->visible()->create([
