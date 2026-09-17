@@ -82,8 +82,8 @@
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
-        "phpstan": "phpstan analyse --memory-limit=2G",
-        "phpstan-baseline": "phpstan analyse --memory-limit=2G --generate-baseline",
+        "phpstan": "phpstan analyse --memory-limit=2G -a vendor/larastan/larastan/bootstrap.php",
+        "phpstan-baseline": "phpstan analyse --memory-limit=2G --generate-baseline -a vendor/larastan/larastan/bootstrap.php",
         "phpunit": "phpunit",
         "rector-check": "rector --dry-run",
         "rector-fix": "rector",

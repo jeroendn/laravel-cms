@@ -761,6 +761,18 @@ create file … tmp/phpstan/cache/nette.configurator/Container_….php` and
 with `./develop composer phpstan -- --debug`; every parallel run after that
 is green.
 
+The `phpstan` composer scripts pass **`-a vendor/larastan/larastan/bootstrap.php`**
+to work around [bladestan#191](https://github.com/bladestan/bladestan/issues/191)
+(hit 2026-09-17, after a `composer update` pulled larastan v3.12 and with it
+phpstan 2.2.14). PHPStan now *defers* `bootstrapFiles` to the moment analysis
+actually starts, but bladestan's `BladeSignatureCacheMetaExtension` already
+needs a booted Laravel before that, while the result cache is restored — it
+calls `resolve(ViewFactory::class)`, and the whole run dies with
+`Target [Illuminate\Contracts\View\Factory] is not instantiable`. `-a` is the
+one hook that still runs eagerly (`CommandHelper::begin()` requires it long
+before the analyse flow), so pointing it at the bootstrap file larastan already
+ships boots the app in time. Drop the flag once bladestan ships a fix.
+
 ## 10. Outstanding
 
 Only open work lives here. **Finished items are deleted from this list, not
@@ -772,3 +784,12 @@ ticked off** — what exists is described in the sections above.
 - Page authorship: `pages` has no `user_id` yet. Users are soft-deleted
       (see §5), so that column can be added later without the delete button
       ever orphaning a page.
+- Drop the phpstan `-a` workaround (§9) once
+      [bladestan#191](https://github.com/bladestan/bladestan/issues/191) is
+      fixed — check on every `composer update` that touches bladestan,
+      larastan or phpstan. To verify: remove
+      `-a vendor/larastan/larastan/bootstrap.php` from both `phpstan`
+      scripts in `composer.json` and run `./develop composer phpstan`. Green
+      means the workaround can go, together with the paragraph in §9;
+      `Target [Illuminate\Contracts\View\Factory] is not instantiable`
+      means it still carries the run.
