@@ -22,13 +22,14 @@ class SettingsTest extends TestCase
 
     public function testTheFormShowsTheCurrentSettings(): void
     {
-        Setting::current()->update(['site_name' => 'The Dreaming', 'primary_color' => '#7c3aed']);
+        Setting::current()->update(['site_name' => 'The Dreaming', 'primary_color' => '#7c3aed', 'container_width' => 1000]);
 
         $response = $this->actingAs(User::factory()->create())->get(route('admin.settings.edit'));
 
         $response->assertOk();
         $response->assertSee('The Dreaming');
         $response->assertSee('#7c3aed');
+        $response->assertSee('value="1000"', false);
     }
 
     public function testSettingsAreSaved(): void
@@ -37,6 +38,7 @@ class SettingsTest extends TestCase
             ->put(route('admin.settings.update'), $this->validPayload([
                 'site_name' => 'The Dreaming',
                 'primary_color' => '#7c3aed',
+                'container_width' => '1000',
                 'under_construction' => '1',
                 'show_login_link' => '1',
                 'locales' => ['en', 'nl'],
@@ -50,6 +52,7 @@ class SettingsTest extends TestCase
 
         $this->assertSame('The Dreaming', $settings->site_name);
         $this->assertSame('#7c3aed', $settings->primary_color);
+        $this->assertSame(1000, $settings->container_width);
         $this->assertTrue($settings->under_construction);
         $this->assertTrue($settings->show_login_link);
         $this->assertSame(['en', 'nl'], $settings->locales);
@@ -102,6 +105,17 @@ class SettingsTest extends TestCase
         $response->assertSee('[data-bs-theme=dark]', false);
     }
 
+    public function testTheContainerWidthOnlyAppliesToThePublicSite(): void
+    {
+        Setting::current()->update(['container_width' => 1000]);
+
+        $this->get(route('home'))->assertSee('style="width: min(100%, 1000px)"', false);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('admin.dashboard'))
+            ->assertDontSee('1000px', false);
+    }
+
     /**
      * @param array<string, mixed> $overrides
      */
@@ -122,6 +136,9 @@ class SettingsTest extends TestCase
         return [
             'not a colour' => ['primary_color', ['primary_color' => 'teal']],
             'shorthand colour' => ['primary_color', ['primary_color' => '#fff']],
+            'container too narrow' => ['container_width', ['container_width' => '710']],
+            'container too wide' => ['container_width', ['container_width' => '1330']],
+            'container width not a number' => ['container_width', ['container_width' => 'wide']],
             'no languages' => ['locales', ['locales' => []]],
             'unknown language' => ['locales.0', ['locales' => ['kl']]],
             'default not offered' => ['default_locale', ['locales' => ['en'], 'default_locale' => 'nl']],
@@ -153,6 +170,7 @@ class SettingsTest extends TestCase
         $this->assertFalse($settings->exists);
         $this->assertSame(config()->string('app.name'), $settings->name());
         $this->assertSame(Setting::DEFAULT_PRIMARY_COLOR, $settings->primary_color);
+        $this->assertSame(Setting::CONTAINER_WIDTH_MAX, $settings->container_width);
         $this->assertSame(['en'], $settings->locales);
 
         // under_construction defaults on, so a row-less site stays hidden.
@@ -203,6 +221,7 @@ class SettingsTest extends TestCase
         return [
             'site_name' => 'The Dreaming',
             'primary_color' => '#750f2e',
+            'container_width' => '1320',
             'locales' => ['en'],
             'default_locale' => 'en',
             ...$overrides,

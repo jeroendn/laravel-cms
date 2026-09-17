@@ -38,7 +38,7 @@ class LanguageSwitcherTest extends TestCase
         $response->assertRedirect(route('home'));
         $response->assertSessionHas('locale', 'nl');
 
-        $this->get(route('home'))->assertSee('Schakel navigatie');
+        $this->get(route('home'))->assertSee('Menu openen of sluiten');
     }
 
     public function testALanguageTheSiteDoesNotOfferIs404(): void
@@ -57,7 +57,7 @@ class LanguageSwitcherTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertServiceUnavailable();
-        $response->assertSee('Deze website is nog in aanbouw');
+        $response->assertSee('Deze website is nog onder constructie');
         $response->assertDontSee(route('language.switch', 'nl'));
     }
 

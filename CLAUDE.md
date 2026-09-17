@@ -17,7 +17,7 @@ This file is loaded automatically as context.
 > cases and gotchas belong here — do not restate them there. When in doubt,
 > leave the README alone.
 >
-> Last updated: 2026-08-21
+> Last updated: 2026-09-17
 
 ---
 
@@ -364,6 +364,22 @@ the app container. Anything it doesn't recognize is passed straight to
   framework translations: `./develop artisan lang:update` after a Laravel
   upgrade, or `lang:add <locale>` for an extra language. The generated
   files are committed.
+- **`lang:update` overwrites every value laravel-lang knows, and keeps
+  every key it does not** (verified 2026-09-17 in
+  `Processors/Processor::store()`, which merges over flattened keys). Two
+  framework values in `nl.json` are corrected by hand anyway, keeping
+  laravel/ui's keys in the views: `Forgot Your Password?` → "Wachtwoord
+  vergeten?" (laravel-lang: "Wachtwoord Vergeten?") and `Toggle navigation`
+  → "Menu openen of sluiten" ("Schakel navigatie"). An update puts
+  laravel-lang's versions back, so check the diff for those two afterwards.
+- **Form fields get a name in `attributes`** of `lang/{en,nl}/validation.php`
+  — those extra keys survive an update too. Without one, a Dutch error
+  reads "Container width moet tussen 720 en 1320 zijn." The English file
+  only needs an entry where the label differs from the column name
+  (`container_width` → "page content width"). That is why the two
+  `validation.php` files differ in length; `nl.json` is longer than
+  `en.json` because the app's own strings need no English entry — the key
+  already is the English text.
 
 ## 5. Authentication
 
@@ -661,6 +677,16 @@ Languages.
   is guarded**: nothing lowers a too-light primary for the *light* body,
   where the primary is also the link color — that is left to whoever picks
   the color.
+- **`container_width`** (slider, 720–1320px, default 1320) caps the page-body
+  `container-xl` in `layouts/app.blade.php` **on top of** Tabler's own
+  breakpoint widths: the container never gets wider than stock, only narrower
+  (decided 2026-09-17). It is an inline **`width: min(100%, Npx)`, not a
+  `max-width`**: an inline `max-width` would beat Bootstrap's 1140/1320 steps
+  and widen the content past the header on 1200–1399px screens, the default
+  included. Setting `width` leaves Bootstrap's
+  `max-width` in charge, so the default renders exactly like plain
+  `container-xl`, and the auto margins keep it centered. Skipped in the admin
+  area (`@unlessadminArea`); header and footer are never touched.
 - **Access** carries `under_construction` (§2) and `show_login_link`, which
   adds `partials/nav-login.blade.php` to the menu for guests. **Languages**
   is described in §4.
@@ -710,6 +736,26 @@ run with `Test directory "…" not found` (exit code 2) — green locally, red
 on CI. Either the directory holds a committed test, or its `<testsuite>` is
 removed from `phpunit.xml`.
 
+**`phpunit.xml` pins `APP_LOCALE` and `APP_FALLBACK_LOCALE` to `en`**, like
+it pins the database and the mailer: without them the suite inherits the
+machine's `.env`, and on a site whose own language is Dutch every assertion
+on a translatable string fails — the settings row is seeded from
+`config('app.locale')` (§7) and `SetLocale` applies it to every request.
+Green on CI, which has no `.env`, red on the developer's machine (hit
+2026-09-17, four tests). The fallback is pinned too: a missed key in
+`lang/en.json` would otherwise resolve through `lang/nl.json`. What this
+does *not* cover is a locale exported in the shell around the run
+(`APP_LOCALE=nl composer phpunit`) — that still wins, `force="true"`
+included, because Laravel reads the process environment ahead of both
+`.env` and PHPUnit (measured 2026-09-17). Nobody does that by accident,
+and `.env` was the real trap.
+
+**A test that needs a specific language sets the settings row, never
+`app()->setLocale()`** — `SetLocale` runs inside the request and overwrites
+whatever the test set before it, silently. `LocalizationTest::offering()`
+and `LanguageSwitcherTest` show the shape; the session key (`withSession(['locale' => …])`)
+is the other way in, which is what a visitor does.
+
 ## 9. Quality gate
 
 `./develop cqa` → composer normalize + validate, rector, php-cs-fixer
@@ -735,6 +781,18 @@ create file … tmp/phpstan/cache/nette.configurator/Container_….php` and
 with `./develop composer phpstan -- --debug`; every parallel run after that
 is green.
 
+The `phpstan` composer scripts pass **`-a vendor/larastan/larastan/bootstrap.php`**
+to work around [bladestan#191](https://github.com/bladestan/bladestan/issues/191)
+(hit 2026-09-17, after a `composer update` pulled larastan v3.12 and with it
+phpstan 2.2.14). PHPStan now *defers* `bootstrapFiles` to the moment analysis
+actually starts, but bladestan's `BladeSignatureCacheMetaExtension` already
+needs a booted Laravel before that, while the result cache is restored — it
+calls `resolve(ViewFactory::class)`, and the whole run dies with
+`Target [Illuminate\Contracts\View\Factory] is not instantiable`. `-a` is the
+one hook that still runs eagerly (`CommandHelper::begin()` requires it long
+before the analyse flow), so pointing it at the bootstrap file larastan already
+ships boots the app in time. Drop the flag once bladestan ships a fix.
+
 ## 10. Outstanding
 
 Only open work lives here. **Finished items are deleted from this list, not
@@ -746,3 +804,12 @@ ticked off** — what exists is described in the sections above.
 - Page authorship: `pages` has no `user_id` yet. Users are soft-deleted
       (see §5), so that column can be added later without the delete button
       ever orphaning a page.
+- Drop the phpstan `-a` workaround (§9) once
+      [bladestan#191](https://github.com/bladestan/bladestan/issues/191) is
+      fixed — check on every `composer update` that touches bladestan,
+      larastan or phpstan. To verify: remove
+      `-a vendor/larastan/larastan/bootstrap.php` from both `phpstan`
+      scripts in `composer.json` and run `./develop composer phpstan`. Green
+      means the workaround can go, together with the paragraph in §9;
+      `Target [Illuminate\Contracts\View\Factory] is not instantiable`
+      means it still carries the run.

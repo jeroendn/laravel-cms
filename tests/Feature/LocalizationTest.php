@@ -45,7 +45,7 @@ class LocalizationTest extends TestCase
         $response = $this->withSession(['locale' => 'nl'])->get(route('home'));
 
         // The burger button's aria-label — a string every public page renders.
-        $response->assertSee('Schakel navigatie');
+        $response->assertSee('Menu openen of sluiten');
     }
 
     /** Without a preference of their own, a visitor gets the site's default. */

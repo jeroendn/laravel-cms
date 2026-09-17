@@ -1,3 +1,4 @@
+@use('App\Models\Setting')
 @extends('layouts.app')
 
 @section('title', __('Settings'))
@@ -40,6 +41,26 @@
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label required" for="container_width">{{ __('Page content width') }}</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input id="container_width" type="range" name="container_width"
+                               min="{{ Setting::CONTAINER_WIDTH_MIN }}" max="{{ Setting::CONTAINER_WIDTH_MAX }}" step="10"
+                               value="{{ old('container_width', (string) $settings->container_width) }}"
+                               class="form-range @error('container_width') is-invalid @enderror"
+                               aria-describedby="container-width-help">
+                        <output id="container_width_value" for="container_width" class="text-nowrap">
+                            {{ old('container_width', (string) $settings->container_width) }}px
+                        </output>
+                    </div>
+                    @error('container_width')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <small id="container-width-help" class="form-hint">
+                        {{ __('How wide the content of your pages gets on large screens. Smaller screens always use the full width.') }}
+                    </small>
+                </div>
             </div>
         </div>
 
@@ -53,7 +74,7 @@
                         <input class="form-check-input" type="checkbox" name="under_construction" value="1"
                                aria-describedby="under-construction-help"
                                @checked(old('under_construction', $settings->under_construction ? '1' : ''))>
-                        <span class="form-check-label">{{ __('Under construction') }}</span>
+                        <span class="form-check-label">{{ __('Construction mode') }}</span>
                     </label>
                     <small id="under-construction-help" class="form-hint">
                         {{ __('The site will not be publicly available and visitors will see a construction page. Admins can still see the public pages when logged in.') }}
